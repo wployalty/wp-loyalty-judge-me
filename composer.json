@@ -1,0 +1,17 @@
+{
+  "name": "wployalty/wployalty_judge_me",
+  "description": "judge me compatibility for wployalty",
+  "minimum-stability": "stable",
+  "license": "proprietary",
+  "authors": [
+    {
+      "name": "Alagesan",
+      "email": "alagesan@cartrabbit.in"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Wljm\\": ""
+    }
+  }
+}
