@@ -26,5 +26,6 @@ class Router
         } else {
             add_action('wp_enqueue_scripts', array(self::$controller, 'addFrontEndScripts'));
         }
+        add_action('rest_api_init', array(self::$controller, 'register_wp_api_endpoints'));
     }
 }

@@ -76,4 +76,72 @@ class Controller
         </style>
         <?php
     }
+
+    function getWebHooks()
+    {
+        $domain = constant('JGM_SHOP_DOMAIN');
+        $token = get_option('judgeme_shop_token');
+        $api_url = 'https://judge.me/api/v1/';
+        $url = $api_url . 'webhooks';
+        $webhook = array(
+            'api_token' => $token,
+            'shop_domain' => $domain,
+        );
+        $response = wp_remote_post($url, array(
+            'method' => 'POST',
+            'blocking' => false,
+            'headers' => array('Content-Type' => 'application/json'),
+            'body' => json_encode($webhook)
+        ));
+        if (is_wp_error($response)) {
+            $error_message = $response->get_error_message();
+            $logger = wc_get_logger();
+            $logger->add('WPLoyalty', json_encode($error_message));
+        }
+        return $response;
+    }
+
+
+    function createWebHook()
+    {
+        $review_keys = array(
+            'review/created',
+            'review/updated'
+        );
+        $domain = constant('JGM_SHOP_DOMAIN');
+        $token = get_option('judgeme_shop_token');
+        $api_url = 'https://judge.me/api/v1/';
+        $url = $api_url . 'webhooks';
+        foreach ($review_keys as $key) {
+            $webhook = array(
+                'api_token' => $token,
+                'shop_domain' => $domain,
+                'webhook' => json_encode(array(
+                    'key' => $key,
+                    'url' => 'http://' . $domain . '/webhook/updated'
+                ))
+            );
+            $response = wp_remote_post($url, array(
+                'method' => 'POST',
+                'blocking' => false,
+                'headers' => array('Content-Type' => 'application/json'),
+                'body' => $webhook
+            ));
+            if (is_wp_error($response)) {
+                $error_message = $response->get_error_message();
+                $logger = wc_get_logger();
+                $logger->add('WPLoyalty', json_encode($error_message));
+            }
+        }
+    }
+
+    function register_wp_api_endpoints()
+    {
+        $namespace = 'wployalty';
+        register_rest_route($namespace, '/widget/preview_badge/updated', array(
+            'methods' => 'POST',
+            'callback' => array($this, 'webhook_preview_badge_callback'),
+            'permission_callback' => '__return_true', // authentication is handled in `handle_callback()`
+        ));
+    }
 }
