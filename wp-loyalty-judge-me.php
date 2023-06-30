@@ -15,7 +15,7 @@
  * Author URI: https://wployalty.net/
  * License: GPLv2 or later
  * License URI: http://www.gnu.org/licenses/gpl-2.0.html
- * WPLoyalty: 1.2.4
+ * WPLoyalty: 1.2.3
  * WPLoyalty Page Link: wp-loyalty-judge-me
  */
 
