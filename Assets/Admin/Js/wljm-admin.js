@@ -1,6 +1,45 @@
 if (typeof (wljm_jquery) == 'undefined') {
     wljm_jquery = jQuery.noConflict();
 }
+wljm_jquery(document).on('click', '#wljm-settings #wljm-setting-submit-button', function () {
+    let form_id = '#wljm-settings #wljm-settings-form';
+    let data = wljm_jquery(form_id).serializeArray();
+    wljm_jquery(form_id).attr('disabled', true);
+    wljm_jquery('#wljm-settings .wljm-error').remove();
+    wljm_jquery("#wljm-settings #wljm-setting-submit-button span").html(wljm_localize_data.saving_button_label);
+    /*wljm_jquery("#wljm-settings .wljm-button-block .spinner").addClass("is-active");*/
+    wljm_jquery.ajax({
+        data: data,
+        type: 'post',
+        url: wljm_localize_data.ajax_url,
+        error: function (request, error) {
+        },
+        success: function (json) {
+            alertify.set('notifier', 'position', 'top-right');
+            wljm_jquery(form_id).attr('disabled', false);
+            wljm_jquery("#wljm-settings #wljm-setting-submit-button span").html(wljm_localize_data.saved_button_label);
+            /*wljm_jquery("#wljm-settings .wljm-button-block .spinner").removeClass("is-active");*/
+            if (json.success == false) {
+                if (json.message) {
+                    alertify.error(json.message);
+                }
+
+                if (json.field_error) {
+                    wljm_jquery.each(json.field_error, function (index, value) {
+                        //alertify.error(value);
+                        wljm_jquery(`#wljm-settings #wljm-settings-form .wljm_${index}_value_block`).after('<span class="wljm-error" style="color: red;">' + value + '</span>');
+                    });
+                }
+            } else {
+                alertify.success(json.message);
+                setTimeout(function () {
+                    /*wljm_jquery("#wljm-settings .wljm-button-block .spinner").removeClass("is-active");*/
+                    location.reload();
+                }, 800);
+            }
+        }
+    });
+});
 wljm_jquery(document).on('click', '#wljm-main-page #wljm-webhook-delete', function () {
     let webhook_key = wljm_jquery(this).data('webhook-key');
     let button = wljm_jquery(this);
@@ -29,18 +68,13 @@ wljm_jquery(document).on('click', '#wljm-main-page #wljm-webhook-delete', functi
             alertify.set('notifier', 'position', 'top-right');
             wljm_jquery(this).attr('disabled', false);
             wljm_jquery(this).html(wljm_localize_data.delete_button_label);
-            if (json.error) {
-                if (json.message) {
-                    alertify.error(json.message);
-                }
-            } else {
+            if (json.success == true) {
                 alertify.success(json.message);
                 setTimeout(function () {
                     location.reload();
                 }, 800);
-            }
-            if (json.redirect) {
-                window.location.href = json.redirect;
+            } else if (json.success == false) {
+                alertify.error(json.message);
             }
         }
     });
@@ -64,18 +98,13 @@ wljm_jquery(document).on('click', '#wljm-main-page #wljm-webhook-create', functi
             alertify.set('notifier', 'position', 'top-right');
             wljm_jquery(this).attr('disabled', false);
             wljm_jquery(this).html(wljm_localize_data.create_button_label);
-            if (json.error) {
-                if (json.message) {
-                    alertify.error(json.message);
-                }
-            } else {
+            if (json.success == true) {
                 alertify.success(json.message);
                 setTimeout(function () {
                     location.reload();
                 }, 800);
-            }
-            if (json.redirect) {
-                window.location.href = json.redirect;
+            } else if (json.success == false) {
+                alertify.error(json.message);
             }
         }
     });

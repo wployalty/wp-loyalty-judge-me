@@ -1,0 +1,210 @@
+$theme-color: #4F47EB;
+$cursor: pointer;
+$color-white: #FFFFFF;
+$border-color: #E7E7EF;
+#wljm-main-page {
+  font-family: Helvetica, sans-serif, Arial, sans-serif;
+  margin-right: 15px;
+  background-color: rgba(248, 248, 252, 1);
+  padding: 0 2rem 2rem 2rem;
+  box-sizing: border-box;
+  text-rendering: optimizeLegibility;
+  scroll-behavior: smooth;
+  outline: none;
+
+  .wljm-main-header {
+    display: flex;
+    width: 100%;
+    align-items: center;
+
+    h1 {
+      color: rgba(22, 31, 49, 1);
+      font-weight: 700;
+      font-size: 1.25rem;
+      line-height: 1.75rem;
+      min-width: max-content;
+    }
+
+    div {
+      position: relative;
+      z-index: 10;
+      margin-top: 0.375rem;
+      display: flex;
+      width: 100%;
+      align-items: center;
+      color: rgba(122, 129, 143, 1);
+      margin-right: calc(0.5rem * calc(1 - 0));
+      margin-left: calc(0.5rem * calc(1 - 0));
+    }
+  }
+
+  .wljm-parent {
+    background: #FFFFFF;
+    width: 100%;
+    border-radius: 0 12px 12px 12px;
+    border: 1px solid #dadae7;
+
+    .wljm-body-content {
+      min-height: 75vh;
+
+      .wljm-webhook-section {
+        display: flex;
+        flex-direction: column;
+        padding: 1.25rem 2rem;
+
+        table th, table td {
+          text-align: left;
+          padding: 0.25em;
+        }
+
+        #wljm-webhook-delete {
+          border: 1px solid #F5425D;
+          color: #F5425D;
+          border-radius: 2px;
+          padding: 10px;
+          background-color: white;
+        }
+
+        #wljm-webhook-create {
+          border: 1px solid #4f47eb;
+          color: #4f47eb;
+          border-radius: 2px;
+          padding: 10px;
+          background-color: white;
+        }
+      }
+
+      .wljm-body-active-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 1.25rem 2rem;
+
+        &:not(.active-content) {
+          display: none;
+        }
+      }
+
+      .active-content {
+        display: flex;
+        justify-content: flex-start;
+      }
+
+      .wljm-heading-data {
+        display: flex;
+        width: 100%;
+        align-items: center;
+        justify-content: space-between;
+
+        a {
+          text-decoration: none;
+          font-size: 13px;
+        }
+
+        .headings {
+          display: flex;
+          width: 100%;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .heading-section {
+          display: flex;
+          align-items: center;
+          justify-content: flex-start;
+          gap: 5px;
+
+          a {
+            margin-top: 5px;
+          }
+        }
+
+        .heading-buttons {
+          display: flex;
+          gap: 0.5rem;
+          align-content: center;
+          justify-content: center;
+        }
+
+        .back-to-loyalty {
+          display: flex;
+          flex-direction: row;
+          justify-content: flex-end;
+          align-items: center;
+          cursor: $cursor;
+          gap: 10px;
+        }
+
+      }
+
+      .wljm-button-action {
+        padding: 0.5rem 1.25rem;
+        border: 1px solid $theme-color;
+        display: flex;
+        gap: 5px;
+        cursor: $cursor;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        min-width: max-content;
+        white-space: nowrap;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        line-height: 1.125rem;
+        font-weight: 500;
+        transition: all 0.1s ease;
+
+        i {
+          font-size: 1rem;
+        }
+      }
+
+      .colored-button {
+        background-color: $theme-color;
+        color: $color-white;
+      }
+
+      .colored-button:disabled {
+        opacity: .5 !important;
+        cursor: not-allowed;
+      }
+
+      .non-colored-button {
+        color: $theme-color;
+        background: white;
+      }
+
+      .wljm-body-data {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+      }
+
+      .menu-title {
+        display: flex;
+        justify-content: flex-start;
+
+        p {
+          font-weight: bold;
+        }
+      }
+
+      .menu-lists {
+        height: 4rem;
+        min-width: 320px;
+
+        select {
+          min-width: 15rem;
+          border-color: #e7e7ef;
+          box-shadow: 0 0 0 1px #e7e7ef;
+          font-size: 13px;
+        }
+
+        .select2-selection__rendered {
+          min-width: 320px;
+        }
+      }
+    }
+  }
+}

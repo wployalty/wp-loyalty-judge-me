@@ -40,7 +40,17 @@ if (!function_exists('isWoocommerceActive')) {
         return in_array('woocommerce/woocommerce.php', $active_plugins) || array_key_exists('woocommerce/woocommerce.php', $active_plugins);
     }
 }
-if (!isWoocommerceActive() || !isWployaltyActiveOrNot()) {
+if (!function_exists('isJudgeMeActive')) {
+    function isJudgeMeActive()
+    {
+        $active_plugins = apply_filters('active_plugins', get_option('active_plugins', array()));
+        if (is_multisite()) {
+            $active_plugins = array_merge($active_plugins, get_site_option('active_sitewide_plugins', array()));
+        }
+        return in_array('judgeme-product-reviews-woocommerce/judgeme.php', $active_plugins) || array_key_exists('judgeme-product-reviews-woocommerce/judgeme.php', $active_plugins);
+    }
+}
+if (!isWoocommerceActive() || !isWployaltyActiveOrNot() || !isJudgeMeActive()) {
     return;
 }
 //Define the plugin version

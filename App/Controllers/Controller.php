@@ -27,7 +27,7 @@ class Controller
         $options = get_option('wljm_settings', array());
         $is_ssl = isset($options['is_ssl']) && !empty($options['is_ssl']) ? $options['is_ssl'] : 'no';
         $domain = 'http://';
-        if ($is_ssl) {
+        if ($is_ssl == 'yes') {
             $domain = 'https://';
         }
         $domain_name = constant('JGM_SHOP_DOMAIN');
@@ -56,14 +56,11 @@ class Controller
             $webhooks = $this->getWebHooks();
             $main_page_params = array(
                 'webhook_list' => $webhooks,
-                'review_keys' => $review_keys
+                'review_keys' => $review_keys,
+                'setting_nonce' => wp_create_nonce('wljm-setting-nonce'),
+                'settings' => get_option('wljm_settings', array()),
+                'back_to_apps_url' => admin_url('admin.php?' . http_build_query(array('page' => WLR_PLUGIN_SLUG))) . '#/apps',
             );
-            /*foreach ($review_keys as $key){
-                if(!isset($webhooks[$key])){
-                    $this->createWebHook($key);
-                }
-            }*/
-
             /*$main_page_params = array(
                 'webhook_list' => array(
                     'review/created' => (object)array(
@@ -83,12 +80,40 @@ class Controller
                         'app_id' => ''
                     )
                 ),
-                'review_keys' => $review_keys
+                'review_keys' => $review_keys,
+                'setting_nonce' => wp_create_nonce('wljm-setting-nonce'),
+                'settings' => get_option('wljm_settings', array()),
+                'back_to_apps_url' => admin_url('admin.php?' . http_build_query(array('page' => WLR_PLUGIN_SLUG))) . '#/apps',
             );*/
             $template->setData($path, $main_page_params)->display();
         } else {
             wp_die(esc_html(__('Page query params missing...', 'wp-loyalty-judge-me')));
         }
+    }
+
+    function saveSettings()
+    {
+        $input = new Input();
+        $wlcr_nonce = (string)$input->post_get('wljm_nonce', '');
+        $response = array(
+            'data' => array()
+        );
+        if (!Woocommerce::hasAdminPrivilege() || !Woocommerce::verify_nonce($wlcr_nonce, 'wljm-setting-nonce')) {
+            $response['success'] = false;
+            $response['message'] = __('Basic validation failed', 'wp-loyalty-judge-me');
+            wp_send_json($response);
+        }
+        $data = $input->post();
+        $unset_array = array('option_key', 'action', 'wljm_nonce');
+        foreach ($unset_array as $unset_key) {
+            if (isset($data[$unset_key])) {
+                unset($data[$unset_key]);
+            }
+        }
+        update_option('wljm_settings', $data, true);
+        $response['success'] = true;
+        $response['message'] = esc_html__('Settings saved successfully!', 'wp-loyalty-judge-me');
+        wp_send_json($response);
     }
 
     function removeAdminNotice()
@@ -108,8 +133,8 @@ class Controller
         $this->removeAdminNotice();
         wp_enqueue_style(WLJM_PLUGIN_SLUG . '-wljm-admin', WLJM_PLUGIN_URL . 'Assets/Admin/Css/wljm-admin.css', array(), WLJM_PLUGIN_VERSION . '&t=' . time());
         wp_enqueue_script(WLJM_PLUGIN_SLUG . '-wljm-admin', WLJM_PLUGIN_URL . 'Assets/Admin/Js/wljm-admin.js', array(), WLJM_PLUGIN_VERSION . '&t=' . time());
-        /*wp_enqueue_style(WLR_PLUGIN_SLUG . '-alertify', WLR_PLUGIN_URL . 'Assets/Admin/Css/alertify.min.css', array(), WLR_PLUGIN_VERSION);
-        wp_enqueue_script(WLR_PLUGIN_SLUG . '-alertify', WLR_PLUGIN_URL . 'Assets/Admin/Js/alertify.min.js', array(), WLR_PLUGIN_VERSION . '&t=' . time());*/
+        wp_enqueue_style(WLR_PLUGIN_SLUG . '-alertify', WLR_PLUGIN_URL . 'Assets/Admin/Css/alertify.min.css', array(), WLR_PLUGIN_VERSION);
+        wp_enqueue_script(WLR_PLUGIN_SLUG . '-alertify', WLR_PLUGIN_URL . 'Assets/Admin/Js/alertify.min.js', array(), WLR_PLUGIN_VERSION . '&t=' . time());
         $localize = array(
             'home_url' => get_home_url(),
             'admin_url' => admin_url(),
@@ -120,7 +145,9 @@ class Controller
             'delete_button_label' => __('Delete', 'wp-loyalty-judge-me'),
             'creating_button_label' => __('Creating...', 'wp-loyalty-judge-me'),
             'create_button_label' => __('Create', 'wp-loyalty-judge-me'),
-            'confirm_label' => __('Are you sure?', 'wp-loyalty-judge-me')
+            'confirm_label' => __('Are you sure?', 'wp-loyalty-judge-me'),
+            'saving_button_label' => __('Saving...', 'wp-loyalty-judge-me'),
+            'saved_button_label' => __('Save', 'wp-loyalty-judge-me'),
         );
         wp_localize_script(WLJM_PLUGIN_SLUG . '-wljm-admin', 'wljm_localize_data', $localize);
     }
