@@ -22,6 +22,26 @@ class Controller
         }
     }
 
+    function getDomainUrl()
+    {
+        $options = get_option('wljm_settings', array());
+        $is_ssl = isset($options['is_ssl']) && !empty($options['is_ssl']) ? $options['is_ssl'] : 'no';
+        $domain = 'http://';
+        if ($is_ssl) {
+            $domain = 'https://';
+        }
+        $domain_name = constant('JGM_SHOP_DOMAIN');
+        return trim($domain . $domain_name, '/');
+    }
+
+    function getReviewKeys()
+    {
+        return array(
+            'review/created',
+            'review/updated'
+        );
+    }
+
     function manageLoyaltyPages()
     {
         if (!Woocommerce::hasAdminPrivilege()) {
@@ -32,11 +52,8 @@ class Controller
         if ($input->get('page', NULL) == WLJM_PLUGIN_SLUG) {
             $template = new Template();
             $path = WLJM_PLUGIN_PATH . 'App/Views/Admin/main.php';
+            $review_keys = $this->getReviewKeys();
             $webhooks = $this->getWebHooks();
-            $review_keys = array(
-                'review/created',
-                'review/updated'
-            );
             $main_page_params = array(
                 'webhook_list' => $webhooks,
                 'review_keys' => $review_keys
@@ -47,13 +64,12 @@ class Controller
                 }
             }*/
 
-
             /*$main_page_params = array(
                 'webhook_list' => array(
                     'review/created' => (object)array(
                         'id' => '9847708',
                         'key' => 'review/created',
-                        'url' => 'http://referlane.com/wp-json/wployalty/v1/review/created',
+                        'url' => $this->getDomainUrl() . '/wp-json/wployalty/v1/review/created',
                         'failure_count' => 0,
                         'last_error_uuid' => '',
                         'app_id' => ''
@@ -61,7 +77,7 @@ class Controller
                     'review/updated' => (object)array(
                         'id' => '9847747',
                         'key' => 'review/updated',
-                        'url' => 'http://referlane.com/wp-json/wployalty/v1/review/updated',
+                        'url' => $this->getDomainUrl() . '/wp-json/wployalty/v1/review/updated',
                         'failure_count' => 0,
                         'last_error_uuid' => '',
                         'app_id' => ''
@@ -98,6 +114,13 @@ class Controller
             'home_url' => get_home_url(),
             'admin_url' => admin_url(),
             'ajax_url' => admin_url('admin-ajax.php'),
+            'delete_nonce' => wp_create_nonce('wljm_delete_nonce'),
+            'create_nonce' => wp_create_nonce('wljm_create_nonce'),
+            'deleting_button_label' => __('Deleting...', 'wp-loyalty-judge-me'),
+            'delete_button_label' => __('Delete', 'wp-loyalty-judge-me'),
+            'creating_button_label' => __('Creating...', 'wp-loyalty-judge-me'),
+            'create_button_label' => __('Create', 'wp-loyalty-judge-me'),
+            'confirm_label' => __('Are you sure?', 'wp-loyalty-judge-me')
         );
         wp_localize_script(WLJM_PLUGIN_SLUG . '-wljm-admin', 'wljm_localize_data', $localize);
     }
@@ -133,15 +156,11 @@ class Controller
             $logger->add('WPLoyalty', json_encode($error_message));
 
         } else {
-            $review_keys = array(
-                'review/created',
-                'review/updated'
-            );
-            $response_code = $response['response']['code'];
+            $review_keys = $this->getReviewKeys();
             $body = json_decode($response['body']);
             if (is_object($body) && isset($body->webhooks) && !empty($body->webhooks)) {
                 foreach ($body->webhooks as $webhook) {
-                    if (in_array($webhook->key, $review_keys) && !isset($return[$webhook->key]) && in_array($webhook->url, array('http://referlane.com/wp-json/wployalty/v1/review/created', 'http://referlane.com/wp-json/wployalty/v1/review/updated'))) {
+                    if (in_array($webhook->key, $review_keys) && !isset($return[$webhook->key]) && in_array($webhook->url, array($this->getDomainUrl() . '/wp-json/wployalty/v1/review/created', $this->getDomainUrl() . '/wp-json/wployalty/v1/review/updated'))) {
                         $return[$webhook->key] = $webhook;
                     }
                 }
@@ -150,7 +169,91 @@ class Controller
         return $return;
     }
 
-    function createWebHook($key)
+    function deleteWebHook()
+    {
+        $input = new Input();
+        $wljm_nonce = (string)$input->post_get('wljm_nonce', '');
+        $response = array();
+        if (!Woocommerce::hasAdminPrivilege() || !Woocommerce::verify_nonce($wljm_nonce, 'wljm_delete_nonce')) {
+            $response['success'] = false;
+            $response['message'] = __('Basic validation failed', 'wp-loyalty-judge-me');
+            wp_send_json($response);
+        }
+        $review_keys = $this->getReviewKeys();
+        $webhook_key = (string)$input->post_get('webhook_key', '');
+        if (empty($webhook_key) || !in_array($webhook_key, $review_keys)) {
+            $response['success'] = false;
+            $response['message'] = __('Webhook key invalid', 'wp-loyalty-judge-me');
+            wp_send_json($response);
+        }
+        $response_code = $this->deleteHook($webhook_key);
+        if ($response_code == 200) {
+            $response['success'] = true;
+            $response['message'] = __('Webhook deleted successfully', 'wp-loyalty-judge-me');
+            wp_send_json($response);
+        }
+        $response['success'] = false;
+        $response['message'] = __('Webhook delete failed', 'wp-loyalty-judge-me');
+        wp_send_json($response);
+    }
+
+    function createWebHook()
+    {
+        $input = new Input();
+        $wljm_nonce = (string)$input->post_get('wljm_nonce', '');
+        $response = array();
+        if (!Woocommerce::hasAdminPrivilege() || !Woocommerce::verify_nonce($wljm_nonce, 'wljm_create_nonce')) {
+            $response['success'] = false;
+            $response['message'] = __('Basic validation failed', 'wp-loyalty-judge-me');
+            wp_send_json($response);
+        }
+        $review_keys = $this->getReviewKeys();
+        $webhook_key = (string)$input->post_get('webhook_key', '');
+        if (empty($webhook_key) || !in_array($webhook_key, $review_keys)) {
+            $response['success'] = false;
+            $response['message'] = __('Webhook key invalid', 'wp-loyalty-judge-me');
+            wp_send_json($response);
+        }
+        $response_code = $this->createHook($webhook_key);
+        if ($response_code == 200) {
+            $response['success'] = true;
+            $response['message'] = __('Webhook created successfully', 'wp-loyalty-judge-me');
+            wp_send_json($response);
+        }
+        $response['success'] = false;
+        $response['message'] = __('Webhook create failed', 'wp-loyalty-judge-me');
+        wp_send_json($response);
+    }
+
+    protected function deleteHook($key)
+    {
+        $domain = constant('JGM_SHOP_DOMAIN');
+        $token = get_option('judgeme_shop_token');
+        $api_url = 'https://judge.me/api/v1/';
+        $url = $api_url . 'webhooks';
+        $webhook_params = array(
+            'api_token' => $token,
+            'shop_domain' => $domain,
+            'key' => $key,
+            'url' => $this->getDomainUrl() . '/wp-json/wployalty/v1/' . $key
+        );
+        $response = wp_remote_post($url, array(
+            'method' => 'DELETE',
+            'headers' => array('Content-Type' => 'application/json'),
+            'body' => json_encode($webhook_params)
+        ));
+        if (is_wp_error($response)) {
+            $error_message = $response->get_error_message();
+            $logger = wc_get_logger();
+            $logger->add('WPLoyalty', json_encode($error_message));
+            $response_code = 400;
+        } else {
+            $response_code = $response['response']['code'];
+        }
+        return $response_code;
+    }
+
+    protected function createHook($key)
     {
         /*$review_keys = array(
             'review/created',
@@ -160,19 +263,19 @@ class Controller
         $token = get_option('judgeme_shop_token');
         $api_url = 'https://judge.me/api/v1/';
         $url = $api_url . 'webhooks';
-        $webhook = array(
+        $webhook_params = array(
             'api_token' => $token,
             'shop_domain' => $domain,
             'webhook' => array(
                 'key' => $key,
-                'url' => 'http://referlane.com/wp-json/wployalty/v1/' . $key
+                'url' => $this->getDomainUrl() . '/wp-json/wployalty/v1/' . $key
             )
         );
 
         $response = wp_remote_post($url, array(
             'method' => 'POST',
             'headers' => array('Content-Type' => 'application/json'),
-            'body' => json_encode($webhook)
+            'body' => json_encode($webhook_params)
         ));
         if (is_wp_error($response)) {
             $error_message = $response->get_error_message();
