@@ -4,10 +4,9 @@ if (typeof (wljm_jquery) == 'undefined') {
 wljm_jquery(document).on('click', '#wljm-settings #wljm-setting-submit-button', function () {
     let form_id = '#wljm-settings #wljm-settings-form';
     let data = wljm_jquery(form_id).serializeArray();
-    wljm_jquery(form_id).attr('disabled', true);
+    wljm_jquery('#wljm-settings #wljm-setting-submit-button').attr('disabled', true);
     wljm_jquery('#wljm-settings .wljm-error').remove();
-    wljm_jquery("#wljm-settings #wljm-setting-submit-button span").html(wljm_localize_data.saving_button_label);
-    /*wljm_jquery("#wljm-settings .wljm-button-block .spinner").addClass("is-active");*/
+    wljm_jquery("#wljm-settings #wljm-setting-submit-button").html('<i class="wlr wlrf-save"></i>' + wljm_localize_data.saving_button_label);
     wljm_jquery.ajax({
         data: data,
         type: 'post',
@@ -16,10 +15,9 @@ wljm_jquery(document).on('click', '#wljm-settings #wljm-setting-submit-button', 
         },
         success: function (json) {
             alertify.set('notifier', 'position', 'top-right');
-            wljm_jquery(form_id).attr('disabled', false);
-            wljm_jquery("#wljm-settings #wljm-setting-submit-button span").html(wljm_localize_data.saved_button_label);
-            /*wljm_jquery("#wljm-settings .wljm-button-block .spinner").removeClass("is-active");*/
             if (json.success == false) {
+                wljm_jquery("#wljm-settings #wljm-setting-submit-button").html('<i class="wlr wlrf-save"></i>' + wljm_localize_data.saved_button_label);
+                wljm_jquery('#wljm-settings #wljm-setting-submit-button').attr('disabled', true);
                 if (json.message) {
                     alertify.error(json.message);
                 }
@@ -66,8 +64,8 @@ wljm_jquery(document).on('click', '#wljm-main-page #wljm-webhook-delete', functi
         },
         success: function (json) {
             alertify.set('notifier', 'position', 'top-right');
-            wljm_jquery(this).attr('disabled', false);
-            wljm_jquery(this).html(wljm_localize_data.delete_button_label);
+            button.attr('disabled', false);
+            button.html(wljm_localize_data.delete_button_label);
             if (json.success == true) {
                 alertify.success(json.message);
                 setTimeout(function () {
@@ -82,6 +80,7 @@ wljm_jquery(document).on('click', '#wljm-main-page #wljm-webhook-delete', functi
 
 wljm_jquery(document).on('click', '#wljm-main-page #wljm-webhook-create', function () {
     let webhook_key = wljm_jquery(this).data('webhook-key');
+    let button = wljm_jquery(this);
     wljm_jquery(this).attr('disabled', true);
     wljm_jquery(this).html(wljm_localize_data.creating_button_label);
     wljm_jquery.ajax({
@@ -96,8 +95,8 @@ wljm_jquery(document).on('click', '#wljm-main-page #wljm-webhook-create', functi
         },
         success: function (json) {
             alertify.set('notifier', 'position', 'top-right');
-            wljm_jquery(this).attr('disabled', false);
-            wljm_jquery(this).html(wljm_localize_data.create_button_label);
+            button.attr('disabled', false);
+            button.html(wljm_localize_data.create_button_label);
             if (json.success == true) {
                 alertify.success(json.message);
                 setTimeout(function () {
