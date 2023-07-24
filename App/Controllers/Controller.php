@@ -243,7 +243,7 @@ class Controller
             wp_send_json($response);
         }
         $response_code = $this->createHook($webhook_key);
-        if ($response_code == 200) {
+        if ($response_code >= 200 && $response_code <= 299) {
             $response['success'] = true;
             $response['message'] = __('Webhook created successfully', 'wp-loyalty-judge-me');
             wp_send_json($response);
