@@ -135,6 +135,7 @@ class Controller
         wp_enqueue_script(WLJM_PLUGIN_SLUG . '-wljm-admin', WLJM_PLUGIN_URL . 'Assets/Admin/Js/wljm-admin.js', array(), WLJM_PLUGIN_VERSION . '&t=' . time());
         wp_enqueue_style(WLR_PLUGIN_SLUG . '-alertify', WLR_PLUGIN_URL . 'Assets/Admin/Css/alertify.min.css', array(), WLR_PLUGIN_VERSION);
         wp_enqueue_script(WLR_PLUGIN_SLUG . '-alertify', WLR_PLUGIN_URL . 'Assets/Admin/Js/alertify.min.js', array(), WLR_PLUGIN_VERSION . '&t=' . time());
+        wp_enqueue_style(WLR_PLUGIN_SLUG . '-wlr-font', WLR_PLUGIN_URL . 'Assets/Site/Css/wlr-fonts.min.css', array(), WLR_PLUGIN_VERSION);
         $localize = array(
             'home_url' => get_home_url(),
             'admin_url' => admin_url(),
@@ -214,7 +215,7 @@ class Controller
             wp_send_json($response);
         }
         $response_code = $this->deleteHook($webhook_key);
-        if ($response_code == 200) {
+        if ($response_code >= 200 && $response_code <= 299) {
             $response['success'] = true;
             $response['message'] = __('Webhook deleted successfully', 'wp-loyalty-judge-me');
             wp_send_json($response);

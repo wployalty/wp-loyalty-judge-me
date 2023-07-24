@@ -17,6 +17,7 @@ defined('ABSPATH') or die;
                         <div class="heading-buttons">
                             <a type="button" class="wljm-button-action non-colored-button"
                                href="<?php echo isset($back_to_apps_url) && !empty($back_to_apps_url) ? $back_to_apps_url : '#'; ?>">
+                                <i class="wlr wlrf-back"></i>
                                 <span><?php esc_html_e("Back to WPLoyalty", 'wp-loyalty-judge-me'); ?></span>
                             </a>
                             <button class="wljm-button-action colored-button" id="wljm-setting-submit-button">
