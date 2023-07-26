@@ -4,7 +4,7 @@
  * Plugin URI: https://www.wployalty.net
  * Description: WPLoyalty - Judge.me Compatibility
  * Version: 1.0.0
- * Author: Wployalty
+ * Author: WPLoyalty
  * Slug: wp-loyalty-judge-me
  * Text Domain: wp-loyalty-judge-me
  * Domain Path: /i18n/languages/
