@@ -24,14 +24,9 @@ class Controller
 
     function getDomainUrl()
     {
-        $options = get_option('wljm_settings', array());
-        $is_ssl = isset($options['is_ssl']) && !empty($options['is_ssl']) ? $options['is_ssl'] : 'no';
-        $domain = 'http://';
-        if ($is_ssl == 'yes') {
-            $domain = 'https://';
-        }
+        $domain = 'https://';
         $domain_name = constant('JGM_SHOP_DOMAIN');
-        return trim($domain . $domain_name, '/');
+        return apply_filters('wljm_domain_url', trim($domain . $domain_name, '/'));
     }
 
     function getReviewKeys()
@@ -58,7 +53,7 @@ class Controller
                 'webhook_list' => $webhooks,
                 'review_keys' => $review_keys,
                 'setting_nonce' => wp_create_nonce('wljm-setting-nonce'),
-                'settings' => get_option('wljm_settings', array()),
+                //'settings' => get_option('wljm_settings', array()),
                 'back_to_apps_url' => admin_url('admin.php?' . http_build_query(array('page' => WLR_PLUGIN_SLUG))) . '#/apps',
             );
             /*$main_page_params = array(
@@ -91,30 +86,30 @@ class Controller
         }
     }
 
-    function saveSettings()
-    {
-        $input = new Input();
-        $wlcr_nonce = (string)$input->post_get('wljm_nonce', '');
-        $response = array(
-            'data' => array()
-        );
-        if (!Woocommerce::hasAdminPrivilege() || !Woocommerce::verify_nonce($wlcr_nonce, 'wljm-setting-nonce')) {
-            $response['success'] = false;
-            $response['message'] = __('Basic validation failed', 'wp-loyalty-judge-me');
-            wp_send_json($response);
-        }
-        $data = $input->post();
-        $unset_array = array('option_key', 'action', 'wljm_nonce');
-        foreach ($unset_array as $unset_key) {
-            if (isset($data[$unset_key])) {
-                unset($data[$unset_key]);
-            }
-        }
-        update_option('wljm_settings', $data, true);
-        $response['success'] = true;
-        $response['message'] = esc_html__('Settings saved successfully!', 'wp-loyalty-judge-me');
-        wp_send_json($response);
-    }
+    /* function saveSettings()
+     {
+         $input = new Input();
+         $wlcr_nonce = (string)$input->post_get('wljm_nonce', '');
+         $response = array(
+             'data' => array()
+         );
+         if (!Woocommerce::hasAdminPrivilege() || !Woocommerce::verify_nonce($wlcr_nonce, 'wljm-setting-nonce')) {
+             $response['success'] = false;
+             $response['message'] = __('Basic validation failed', 'wp-loyalty-judge-me');
+             wp_send_json($response);
+         }
+         $data = $input->post();
+         $unset_array = array('option_key', 'action', 'wljm_nonce');
+         foreach ($unset_array as $unset_key) {
+             if (isset($data[$unset_key])) {
+                 unset($data[$unset_key]);
+             }
+         }
+         update_option('wljm_settings', $data, true);
+         $response['success'] = true;
+         $response['message'] = esc_html__('Settings saved successfully!', 'wp-loyalty-judge-me');
+         wp_send_json($response);
+     }*/
 
     function removeAdminNotice()
     {
@@ -188,7 +183,7 @@ class Controller
             $body = json_decode($response['body']);
             if (is_object($body) && isset($body->webhooks) && !empty($body->webhooks)) {
                 foreach ($body->webhooks as $webhook) {
-                    if (in_array($webhook->key, $review_keys) && !isset($return[$webhook->key]) && in_array($webhook->url, array($this->getDomainUrl() . '/wp-json/wployalty/v1/review/created', $this->getDomainUrl() . '/wp-json/wployalty/v1/review/updated'))) {
+                    if (in_array($webhook->key, $review_keys) && !isset($return[$webhook->key]) && in_array($webhook->url, array($this->getDomainUrl() . '/wp-json/wployalty/judge_me/v1/review/created', $this->getDomainUrl() . '/wp-json/wployalty/judge_me/v1/review/updated'))) {
                         $return[$webhook->key] = $webhook;
                     }
                 }
@@ -263,7 +258,7 @@ class Controller
             'api_token' => $token,
             'shop_domain' => $domain,
             'key' => $key,
-            'url' => $this->getDomainUrl() . '/wp-json/wployalty/v1/' . $key
+            'url' => $this->getDomainUrl() . '/wp-json/wployalty/judge_me/v1/' . $key
         );
         $response = wp_remote_post($url, array(
             'method' => 'DELETE',
@@ -296,7 +291,7 @@ class Controller
             'shop_domain' => $domain,
             'webhook' => array(
                 'key' => $key,
-                'url' => $this->getDomainUrl() . '/wp-json/wployalty/v1/' . $key
+                'url' => $this->getDomainUrl() . '/wp-json/wployalty/judge_me/v1/' . $key
             )
         );
 
@@ -318,7 +313,7 @@ class Controller
 
     function register_wp_api_endpoints()
     {
-        $namespace = 'wployalty/v1';
+        $namespace = 'wployalty/judge_me/v1';
         register_rest_route($namespace, '/review/created', array(
             'methods' => 'POST',
             'callback' => array($this, 'webhook_review_created_callback'),
@@ -336,6 +331,7 @@ class Controller
         $token = get_option('judgeme_shop_token');
         $header_hashed = $data->get_header('JUDGEME-HMAC-SHA256');
         $internal_hashed = hash_hmac('sha256', $data->get_body(), $token, false);
+        $response = array();
         if (hash_equals($header_hashed, $internal_hashed)) {
             $body = $data->get_json_params();
             $review_id = $body['review']['id'];
@@ -353,7 +349,13 @@ class Controller
                 );
                 $product_review_helper->applyEarnProductReview($action_data);
             }
+            $response['success'] = true;
+            $response['message'] = __('Webhook received successfully', 'wp-loyalty-judge-me');
+        } else {
+            $response['success'] = false;
+            $response['message'] = __('Hash validation failed', 'wp-loyalty-judge-me');
         }
+        return new \WP_REST_Response($response, 200);
     }
 
     public function webhook_review_updated_callback($data)
@@ -361,6 +363,7 @@ class Controller
         $token = get_option('judgeme_shop_token');
         $header_hashed = $data->get_header('JUDGEME-HMAC-SHA256');
         $internal_hashed = hash_hmac('sha256', $data->get_body(), $token, false);
+        $response = array();
         if (hash_equals($header_hashed, $internal_hashed)) {
             $body = $data->get_json_params();
             $review_id = $body['review']['id'];
@@ -378,7 +381,13 @@ class Controller
                 );
                 $product_review_helper->applyEarnProductReview($action_data);
             }
+            $response['success'] = true;
+            $response['message'] = __('Webhook received successfully', 'wp-loyalty-judge-me');
+        } else {
+            $response['success'] = false;
+            $response['message'] = __('Hash validation failed', 'wp-loyalty-judge-me');
         }
+        return new \WP_REST_Response($response, 200);
     }
 
 }

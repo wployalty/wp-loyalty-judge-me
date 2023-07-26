@@ -12,7 +12,7 @@ defined('ABSPATH') or die;
                 <div class="wljm-heading-data">
                     <div class="headings">
                         <div class="heading-section">
-                            <h3><?php esc_html_e("SETTINGS", 'wp-loyalty-judge-me'); ?></h3>
+                            <h3><?php esc_html_e("WebHooks", 'wp-loyalty-judge-me'); ?></h3>
                         </div>
                         <div class="heading-buttons">
                             <a type="button" class="wljm-button-action non-colored-button"
@@ -20,37 +20,36 @@ defined('ABSPATH') or die;
                                 <i class="wlr wlrf-back"></i>
                                 <span><?php esc_html_e("Back to WPLoyalty", 'wp-loyalty-judge-me'); ?></span>
                             </a>
-                            <button class="wljm-button-action colored-button" id="wljm-setting-submit-button">
-                                <i class="wlr wlrf-save"></i><?php esc_html_e('Save', 'wp-loyalty-judge-me'); ?>
-                            </button>
+                            <!--<button class="wljm-button-action colored-button" id="wljm-setting-submit-button">
+                                <i class="wlr wlrf-save"></i><?php /*esc_html_e('Save', 'wp-loyalty-judge-me'); */ ?>
+                            </button>-->
                         </div>
                     </div>
                 </div>
                 <div class="wljm-body-data">
-                    <form id="wljm-settings-form" method="post">
+                    <!--<form id="wljm-settings-form" method="post">
                         <div>
                             <div class="menu-title">
-                                <p><?php esc_html_e('Is domain allowed (https):', 'wp-loyalty-judge-me'); ?></p>
+                                <p><?php /*esc_html_e('Is domain allowed (https):', 'wp-loyalty-judge-me'); */ ?></p>
                             </div>
-                            <?php $is_ssl = isset($settings) && is_array($settings) && isset($settings['is_ssl']) && !empty($settings['is_ssl']) ? $settings['is_ssl'] : 'no'; ?>
+                            <?php /*$is_ssl = isset($settings) && is_array($settings) && isset($settings['is_ssl']) && !empty($settings['is_ssl']) ? $settings['is_ssl'] : 'no'; */ ?>
                             <div class="menu-lists">
                                 <select name="is_ssl">
                                     <option
-                                        value="no" <?php echo $is_ssl == 'no' ? 'selected="selected"' : ''; ?>><?php esc_html_e('No', 'wp-loyalty-judge-me'); ?></option>
+                                        value="no" <?php /*echo $is_ssl == 'no' ? 'selected="selected"' : ''; */ ?>><?php /*esc_html_e('No', 'wp-loyalty-judge-me'); */ ?></option>
                                     <option
-                                        value="yes" <?php echo $is_ssl == 'yes' ? 'selected="selected"' : ''; ?>><?php esc_html_e('Yes', 'wp-loyalty-judge-me'); ?></option>
+                                        value="yes" <?php /*echo $is_ssl == 'yes' ? 'selected="selected"' : ''; */ ?>><?php /*esc_html_e('Yes', 'wp-loyalty-judge-me'); */ ?></option>
                                 </select>
                             </div>
                         </div>
                         <input type="hidden" name="action" value="wljm_save_settings">
                         <input type="hidden" name="wljm_nonce"
-                               value="<?php echo isset($setting_nonce) && !empty($setting_nonce) ? esc_attr($setting_nonce) : ''; ?>">
-                    </form>
+                               value="<?php /*echo isset($setting_nonce) && !empty($setting_nonce) ? esc_attr($setting_nonce) : ''; */ ?>">
+                    </form>-->
                 </div>
             </div>
             <div class="wljm-webhook-section table-content">
                 <?php if (isset($review_keys) && !empty($review_keys)): ?>
-                    <h3><?php esc_html_e('WebHooks', 'wp-loyalty-judge-me') ?></h3>
                     <table>
                         <tr>
                             <th><?php esc_html_e('WebHook id:', 'wp-loyalty-judge-me') ?></th>
