@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: WPLoyalty - Judge.me Compatibility
+ * Plugin Name: WPLoyalty - Judge.Me
  * Plugin URI: https://www.wployalty.net
- * Description: WPLoyalty - Judge.me Compatibility
+ * Description: The add-on integrates WPLoyalty with the Judge.me and allows you to reward customers with points for writing reviews in Judge.me
  * Version: 1.0.0
  * Author: WPLoyalty
  * Slug: wp-loyalty-judge-me

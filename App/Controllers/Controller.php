@@ -7,6 +7,7 @@
 
 namespace Wljm\App\Controllers;
 
+use Wlr\App\Helpers\EarnCampaign;
 use Wlr\App\Helpers\Input;
 use Wlr\App\Helpers\Template;
 use Wlr\App\Helpers\Woocommerce;
@@ -390,4 +391,31 @@ class Controller
         return new \WP_REST_Response($response, 200);
     }
 
+    function displayProductReviewMessage()
+    {
+        if (!is_user_logged_in()) {
+            return;
+        }
+        $woocommerce = new Woocommerce();
+        global $product;
+        $post_id = is_object($product) && $woocommerce->isMethodExists($product, 'get_id') ? $product->get_id() : 0;
+        if ($post_id <= 0) {
+            return;
+        }
+        $earn_campaign = EarnCampaign::getInstance();
+        $cart_action_list = array(
+            'product_review'
+        );
+        $extra = array('user_email' => $woocommerce->get_login_user_email(), 'product_id' => $post_id, 'is_calculate_based' => 'product', 'product' => $woocommerce->getProduct($post_id));
+        $reward_list = $earn_campaign->getActionEarning($cart_action_list, $extra);
+        $message = '';
+        foreach ($reward_list as $action => $rewards) {
+            foreach ($rewards as $key => $reward) {
+                if (isset($reward['messages']) && !empty($reward['messages'])) {
+                    $message .= "<br/>" . $reward['messages'];
+                }
+            }
+        }
+        echo $message;
+    }
 }

@@ -30,5 +30,9 @@ class Router
             add_action('wp_enqueue_scripts', array(self::$controller, 'addFrontEndScripts'));
         }*/
         add_action('rest_api_init', array(self::$controller, 'register_wp_api_endpoints'));
+        $hide_widget = get_option('judgeme_option_hide_widget');
+        if (!$hide_widget) {
+            add_action('woocommerce_after_single_product_summary', array(self::$controller, 'displayProductReviewMessage'), 13);
+        }
     }
 }
