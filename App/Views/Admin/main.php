@@ -27,7 +27,7 @@ defined('ABSPATH') or die;
                     <div
                         style="background-color: #ffba00;border-radius: 10px;border-color: #f5c6cb;padding: 14px;font-weight: bold;">
                         <p><?php _e('NOTE: You should have set up the official Judge.me for WooCommerce plugin properly before attempting to create the webhooks. This add-on depends on the configuration from the official Judge.me plugin for WooCommerce.', 'wp-loyalty-judge-me'); ?></p>
-                        <p><?php _e('Please click on the "Create" button to create a Webhook in your Judge.me account so that when a review is posted, WPloyalty can listen and reward the customer with points / rewards as per your configuration.', 'wp-loyalty-judge-me') ?></p>
+                        <p><?php _e('Please click on the "Create" button to create a Webhook in your Judge.me account so that when a review is posted, WPLoyalty can listen and reward the customer with points / rewards as per your configuration.', 'wp-loyalty-judge-me') ?></p>
                     </div>
                 </div>
             </div>
