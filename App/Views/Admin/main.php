@@ -20,37 +20,15 @@ defined('ABSPATH') or die;
                                 <i class="wlr wlrf-back"></i>
                                 <span><?php esc_html_e("Back to WPLoyalty", 'wp-loyalty-judge-me'); ?></span>
                             </a>
-                            <!--<button class="wljm-button-action colored-button" id="wljm-setting-submit-button">
-                                <i class="wlr wlrf-save"></i><?php /*esc_html_e('Save', 'wp-loyalty-judge-me'); */ ?>
-                            </button>-->
                         </div>
                     </div>
                 </div>
                 <div class="wljm-body-data">
                     <div
                         style="background-color: #ffba00;border-radius: 10px;border-color: #f5c6cb;padding: 14px;font-weight: bold;">
-                        <p><?php _e('NOTE: You should have set up the Jofficial udge.me for WooCommerce plugin properly before attempting to create the webhooks. This add-on depends on the configuration from the official Judge.me plugin for WooCommerce.', 'wp-loyalty-judge-me'); ?></p>
+                        <p><?php _e('NOTE: You should have set up the official Judge.me for WooCommerce plugin properly before attempting to create the webhooks. This add-on depends on the configuration from the official Judge.me plugin for WooCommerce.', 'wp-loyalty-judge-me'); ?></p>
                         <p><?php _e('Please click on the "Create" button to create a Webhook in your Judge.me account so that when a review is posted, WPloyalty can listen and reward the customer with points / rewards as per your configuration.', 'wp-loyalty-judge-me') ?></p>
                     </div>
-                    <!--<form id="wljm-settings-form" method="post">
-                        <div>
-                            <div class="menu-title">
-                                <p><?php /*esc_html_e('Is domain allowed (https):', 'wp-loyalty-judge-me'); */ ?></p>
-                            </div>
-                            <?php /*$is_ssl = isset($settings) && is_array($settings) && isset($settings['is_ssl']) && !empty($settings['is_ssl']) ? $settings['is_ssl'] : 'no'; */ ?>
-                            <div class="menu-lists">
-                                <select name="is_ssl">
-                                    <option
-                                        value="no" <?php /*echo $is_ssl == 'no' ? 'selected="selected"' : ''; */ ?>><?php /*esc_html_e('No', 'wp-loyalty-judge-me'); */ ?></option>
-                                    <option
-                                        value="yes" <?php /*echo $is_ssl == 'yes' ? 'selected="selected"' : ''; */ ?>><?php /*esc_html_e('Yes', 'wp-loyalty-judge-me'); */ ?></option>
-                                </select>
-                            </div>
-                        </div>
-                        <input type="hidden" name="action" value="wljm_save_settings">
-                        <input type="hidden" name="wljm_nonce"
-                               value="<?php /*echo isset($setting_nonce) && !empty($setting_nonce) ? esc_attr($setting_nonce) : ''; */ ?>">
-                    </form>-->
                 </div>
             </div>
             <div class="wljm-webhook-section table-content">

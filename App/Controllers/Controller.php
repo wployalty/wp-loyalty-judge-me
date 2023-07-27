@@ -86,32 +86,7 @@ class Controller
             wp_die(esc_html(__('Page query params missing...', 'wp-loyalty-judge-me')));
         }
     }
-
-    /* function saveSettings()
-     {
-         $input = new Input();
-         $wlcr_nonce = (string)$input->post_get('wljm_nonce', '');
-         $response = array(
-             'data' => array()
-         );
-         if (!Woocommerce::hasAdminPrivilege() || !Woocommerce::verify_nonce($wlcr_nonce, 'wljm-setting-nonce')) {
-             $response['success'] = false;
-             $response['message'] = __('Basic validation failed', 'wp-loyalty-judge-me');
-             wp_send_json($response);
-         }
-         $data = $input->post();
-         $unset_array = array('option_key', 'action', 'wljm_nonce');
-         foreach ($unset_array as $unset_key) {
-             if (isset($data[$unset_key])) {
-                 unset($data[$unset_key]);
-             }
-         }
-         update_option('wljm_settings', $data, true);
-         $response['success'] = true;
-         $response['message'] = esc_html__('Settings saved successfully!', 'wp-loyalty-judge-me');
-         wp_send_json($response);
-     }*/
-
+    
     function removeAdminNotice()
     {
         remove_all_actions('admin_notices');
