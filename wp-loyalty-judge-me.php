@@ -3,19 +3,19 @@
  * Plugin Name: WPLoyalty - Judge.Me
  * Plugin URI: https://www.wployalty.net
  * Description: The add-on integrates WPLoyalty with the Judge.me and allows you to reward customers with points for writing reviews in Judge.me
- * Version: 1.0.0
+ * Version: 0.0.1
  * Author: WPLoyalty
  * Slug: wp-loyalty-judge-me
  * Text Domain: wp-loyalty-judge-me
  * Domain Path: /i18n/languages/
  * Requires at least: 4.9.0
  * WC requires at least: 6.5
- * WC tested up to: 7.8
+ * WC tested up to: 7.9
  * Contributors: Alagesan
  * Author URI: https://wployalty.net/
  * License: GPLv2 or later
  * License URI: http://www.gnu.org/licenses/gpl-2.0.html
- * WPLoyalty: 1.2.3
+ * WPLoyalty: 1.2.4
  * WPLoyalty Page Link: wp-loyalty-judge-me
  */
 
@@ -54,8 +54,8 @@ if (!isWoocommerceActive() || !isWployaltyActiveOrNot() || !isJudgeMeActive()) {
     return;
 }
 //Define the plugin version
-defined('WLJM_PLUGIN_VERSION') or define('WLJM_PLUGIN_VERSION', '1.0.0');
-defined('WLJM_PLUGIN_NAME') or define('WLJM_PLUGIN_NAME', 'WPLoyalty - Judge.me Compatibility');
+defined('WLJM_PLUGIN_VERSION') or define('WLJM_PLUGIN_VERSION', '0.0.1');
+defined('WLJM_PLUGIN_NAME') or define('WLJM_PLUGIN_NAME', 'WPLoyalty - Judge.Me');
 defined('WLJM_TEXT_DOMAIN') or define('WLJM_TEXT_DOMAIN', 'wp-loyalty-judge-me');
 defined('WLJM_PLUGIN_SLUG') or define('WLJM_PLUGIN_SLUG', 'wp-loyalty-judge-me');
 defined('WLJM_PLUGIN_PATH') or define('WLJM_PLUGIN_PATH', __DIR__ . '/');
