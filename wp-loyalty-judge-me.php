@@ -73,7 +73,14 @@ if (!file_exists(__DIR__ . '/vendor/autoload.php')) {
 require __DIR__ . '/vendor/autoload.php';
 $plugin_rel_path = 'wp-loyalty-judge-me/i18n/languages/';
 load_plugin_textdomain('wp-loyalty-judge-me', false, $plugin_rel_path);
-if (class_exists('\Wljm\App\Router')) {
+
+if (class_exists(\Wljm\App\Router::class)) {
+    $myUpdateChecker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
+        'https://github.com/wployalty/wployalty_judge_me',
+        __FILE__,
+        'wp-loyalty-judge-me'
+    );
+    $myUpdateChecker->getVcsApi()->enableReleaseAssets();
     $router = new \Wljm\App\Router();
-    $router->init();
+    if (method_exists($router, 'init')) $router->init();
 }
