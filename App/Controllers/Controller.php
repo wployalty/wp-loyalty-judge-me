@@ -183,7 +183,7 @@ class Controller
             $body = json_decode($response['body']);
             if (is_object($body) && isset($body->webhooks) && !empty($body->webhooks)) {
                 foreach ($body->webhooks as $webhook) {
-                    if (in_array($webhook->key, $review_keys) && !isset($return[$webhook->key]) && in_array($webhook->url, array($this->getDomainUrl() . '/wp-json/wployalty/judge_me/v1/review/created', $this->getDomainUrl() . '/wp-json/wployalty/judge_me/v1/review/updated'))) {
+                    if (in_array($webhook->key, $review_keys) && !isset($return[$webhook->key]) && in_array($webhook->url, array($this->getDomainUrl() . '/wp-json/wployalty/judgeme/v1/review/created', $this->getDomainUrl() . '/wp-json/wployalty/judgeme/v1/review/updated'))) {
                         $return[$webhook->key] = $webhook;
                     }
                 }
@@ -258,7 +258,7 @@ class Controller
             'api_token' => $token,
             'shop_domain' => $domain,
             'key' => $key,
-            'url' => $this->getDomainUrl() . '/wp-json/wployalty/judge_me/v1/' . $key
+            'url' => $this->getDomainUrl() . '/wp-json/wployalty/judgeme/v1/' . $key
         );
         $response = wp_remote_post($url, array(
             'method' => 'DELETE',
@@ -291,7 +291,7 @@ class Controller
             'shop_domain' => $domain,
             'webhook' => array(
                 'key' => $key,
-                'url' => $this->getDomainUrl() . '/wp-json/wployalty/judge_me/v1/' . $key
+                'url' => $this->getDomainUrl() . '/wp-json/wployalty/judgeme/v1/' . $key
             )
         );
 
@@ -313,7 +313,7 @@ class Controller
 
     function register_wp_api_endpoints()
     {
-        $namespace = 'wployalty/judge_me/v1';
+        $namespace = 'wployalty/judgeme/v1';
         register_rest_route($namespace, '/review/created', array(
             'methods' => 'POST',
             'callback' => array($this, 'webhook_review_created_callback'),
