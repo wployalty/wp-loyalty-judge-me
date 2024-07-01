@@ -846,14 +846,4 @@ class EarnCampaign extends Base {
 
 		return $rewards;
 	}
-
-	function is_valid_action( $action_type ) {
-		$status       = false;
-		$action_types = self::$woocommerce_helper->getActionTypes();
-		if ( ! empty( $action_type ) && isset( $action_types[ $action_type ] ) && ! empty( $action_types[ $action_type ] ) ) {
-			$status = true;
-		}
-
-		return $status;
-	}
 }

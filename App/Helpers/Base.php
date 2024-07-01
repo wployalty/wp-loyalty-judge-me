@@ -3,9 +3,11 @@
 namespace Wljm\App\Helpers;
 
 use Wljm\App\Models\EarnCampaignTransactions;
+use Wljm\App\Models\UserRewards;
 
 class Base {
 	public static $woocommerce_helper;
+	public static $user_reward_by_coupon = array();
 
 	public function __construct( $config = array() ) {
 		self::$woocommerce_helper              = empty( self::$woocommerce_helper ) ? Woocommerce::getInstance() : self::$woocommerce_helper;
@@ -92,12 +94,12 @@ class Base {
 				if ( self::$woocommerce_helper->isJson( $rule->earn_campaign->point_rule ) ) {
 					$point_rule        = json_decode( $rule->earn_campaign->point_rule );
 					$class_name        = ucfirst( $this->camelCaseAction( $action_type ) );
-					$class_free_helper = '\\Wlr\\App\\Helpers\\' . $class_name;
-					$class_pro_helper  = '\\Wlr\\App\\Premium\\Helpers\\' . $class_name;
+					$class_free_helper = '\\Wljm\\App\\Helpers\\' . $class_name;
+					$class_pro_helper  = '\\Wljm\\App\\Premium\\Helpers\\' . $class_name;
 					if ( class_exists( $class_free_helper ) ) {
-						$helper = new $class_free_helper();
+						$helper = new $class_free_helper;
 					} elseif ( class_exists( $class_pro_helper ) ) {
-						$helper = new $class_pro_helper();
+						$helper = new $class_pro_helper;
 					}
 					if ( isset( $helper ) && method_exists( $helper, 'processMessage' ) ) {
 						$messages = $helper->processMessage( $point_rule, $earning );
@@ -155,6 +157,40 @@ class Base {
 		return apply_filters( 'wlr_social_action_list', $social_action_list );
 	}
 
+	function is_loyalty_coupon( $code ) {
+		if ( empty( $code ) ) {
+			return false;
+		}
+		$user_reward = $this->getUserRewardByCoupon( $code );
+		if ( ! empty( $user_reward ) ) {
+			return true;
+		}
+
+		return false;
+	}
+
+	function getUserRewardByCoupon( $code ) {
+		if ( empty( $code ) ) {
+			return '';
+		}
+		$code = ( is_object( $code ) && isset( $code->code ) ) ? $code->get_code() : $code;
+		if ( ! isset( self::$user_reward_by_coupon[ $code ] ) ) {
+			self::$user_reward_by_coupon[ $code ] = ( new UserRewards() )->getQueryData(
+				array(
+					'discount_code' => array(
+						'operator' => '=',
+						'value'    => $code,
+					),
+				),
+				'*',
+				array(),
+				false
+			);
+		}
+
+		return isset( self::$user_reward_by_coupon[ $code ] ) ? self::$user_reward_by_coupon[ $code ] : '';
+	}
+
 	function checkUserEarnedInCampaignFromOrder( $order_id, $campaign_id ) {
 		if ( $order_id <= 0 || $campaign_id <= 0 ) {
 			return false;
@@ -165,6 +201,33 @@ class Base {
 
 		return ! empty( $result );
 	}
+
+	protected function camelCaseAction( $action_type ) {
+		$action_type = trim( $action_type );
+		$action_type = lcfirst( $action_type );
+		$action_type = preg_replace( '/^[-_]+/', '', $action_type );
+		$action_type = preg_replace_callback(
+			'/[-_\s]+(.)?/u',
+			function ( $match ) {
+				if ( isset( $match[1] ) ) {
+					return strtoupper( $match[1] );
+				} else {
+					return '';
+				}
+			},
+			$action_type
+		);
+		$action_type = preg_replace_callback(
+			'/[\d]+(.)?/u',
+			function ( $match ) {
+				return strtoupper( $match[0] );
+			},
+			$action_type
+		);
+
+		return $action_type;
+	}
+
 	function is_valid_action( $action_type ) {
 		$status       = false;
 		$action_types = self::$woocommerce_helper->getActionTypes();

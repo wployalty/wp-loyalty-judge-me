@@ -95,6 +95,12 @@ class Woocommerce {
 		return $user_email;
 	}
 
+	function isJson( $string ) {
+		json_decode( $string );
+
+		return ( json_last_error() == JSON_ERROR_NONE );
+	}
+
 	function isBannedUser( $user_email = "" ) {
 		if ( empty( $user_email ) ) {
 			$user_email = $this->get_login_user_email();
