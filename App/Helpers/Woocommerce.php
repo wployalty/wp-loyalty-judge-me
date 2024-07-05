@@ -388,4 +388,13 @@ class Woocommerce {
 
 		return array();
 	}
+
+	function setSession( $key, $data ) {
+		if ( function_exists( 'WC' ) ) {
+			if ( isset( WC()->session ) && is_object( WC()->session ) && $this->isMethodExists( WC()->session, 'set' ) ) {
+				WC()->session->set( $key, $data );
+			}
+		}
+	}
+
 }

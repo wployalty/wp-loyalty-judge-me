@@ -576,7 +576,7 @@ class EarnCampaign extends Base {
 				$user_reward_table
 					= $user_reward_model->getByKey( $user_reward_status );
 				if ( ! empty( $user_reward_table ) ) {
-					$reward_helper = new Rewards();
+					$reward_helper = new \Wljm\App\Helpers\Rewards();
 					if ( isset( $user_reward_table->discount_code )
 					     && empty( $user_reward_table->discount_code )
 					) {

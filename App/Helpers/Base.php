@@ -7,7 +7,7 @@ use Wljm\App\Models\Logs;
 use Wljm\App\Models\PointsLedger;
 use Wljm\App\Models\UserRewards;
 use Wljm\App\Models\Users;
-
+use Exception;
 class Base {
 	public static $woocommerce_helper, $user_model, $earn_campaign_transaction_model, $user_by_email;
 	public static $user_reward_by_coupon = array();
@@ -481,5 +481,194 @@ class Base {
 		}
 
 		return $is_including_tax;
+	}
+
+	function addExtraPointAction( $action_type, $point, $action_data, $trans_type = 'credit', $is_update_used_point = false, $force_update_earn_campaign = false, $update_earn_total_point = true ) {
+		self::$woocommerce_helper->_log( 'Extra Action :' . $action_type . ',Point:' . $point . ', Trans:' . $trans_type );
+		if ( ! is_array( $action_data ) || $point < 0 || empty( $action_data['user_email'] ) || empty( $action_type ) || ! $this->isValidExtraAction( $action_type ) ) {
+			return false;
+		}
+		$action_data = apply_filters( 'wlr_before_extra_point_data', $action_data, $point, $action_type );
+		$status      = true;
+		$point       = apply_filters( 'wlr_before_add_earn_point', $point, $action_type, $action_data );
+		$point       = apply_filters( 'wlr_notify_before_add_earn_point', $point, $action_type, $action_data );
+		$conditions  = array(
+			'user_email' => array(
+				'operator' => '=',
+				'value'    => sanitize_email( $action_data['user_email'] ),
+			),
+		);
+		$user        = self::$user_model->getQueryData( $conditions, '*', array(), false );
+		$created_at  = strtotime( date( 'Y-m-d H:i:s' ) );
+		$id          = 0;
+		if ( ! empty( $user ) && $user->id > 0 ) {
+			$id = $user->id;
+			if ( $trans_type == 'credit' ) {
+				$user->points += $point;
+				if ( $update_earn_total_point ) {
+					$user->earn_total_point = $user->earn_total_point + $point;
+				}
+				if ( $is_update_used_point ) {
+					$user->used_total_points -= $point;
+					if ( $user->used_total_points < 0 ) {
+						$user->used_total_points = 0;
+					}
+				}
+			} else {
+				if ( $user->points < $point ) {
+					$point        = $user->points;
+					$user->points = 0;
+				} else {
+					$user->points -= $point;
+				}
+
+				if ( $is_update_used_point ) {
+					$user->used_total_points += $point;
+				}
+				if ( $user->points <= 0 ) {
+					$user->points = 0;
+				}
+			}
+
+			$birthday_date = isset( $action_data['birthday_date'] ) && ! empty( $action_data['birthday_date'] ) ? $action_data['birthday_date'] : $user->birthday_date;
+			$birth_date    = empty( $birthday_date ) || $birthday_date == '0000-00-00' ? $user->birth_date : strtotime( $birthday_date );
+			$_data         = array(
+				'points'            => (int) $user->points,
+				'earn_total_point'  => (int) $user->earn_total_point,
+				'birth_date'        => $birth_date,
+				'birthday_date'     => $birthday_date,
+				'used_total_points' => (int) $user->used_total_points,
+			);
+		} else {
+			if ( $trans_type == 'debit' ) {
+				$point = 0;
+			}
+			$ref_code        = isset( $action_data['referral_code'] ) && ! empty( $action_data['referral_code'] ) ? $action_data['referral_code'] : '';
+			$uniqueReferCode = $this->get_unique_refer_code( $ref_code, false, $action_data['user_email'] );
+			$_data           = array(
+				'user_email'        => sanitize_email( $action_data['user_email'] ),
+				'refer_code'        => $uniqueReferCode,
+				'used_total_points' => 0,
+				'points'            => (int) $point,
+				'earn_total_point'  => (int) $point,
+				'birth_date'        => 0,
+				'birthday_date'     => null,
+				'created_date'      => $created_at,
+			);
+		}
+		$ledger_data = array(
+			'user_email'          => $action_data['user_email'],
+			'points'              => (int) $point,
+			'action_type'         => $action_type,
+			'action_process_type' => isset( $action_data['action_process_type'] ) && ! empty( $action_data['action_process_type'] ) ? $action_data['action_process_type'] : $action_type,
+			'note'                => isset( $action_data['note'] ) && ! empty( $action_data['note'] ) ? $action_data['note'] : '',
+			'created_at'          => $created_at,
+		);
+		self::$woocommerce_helper->_log( 'Extra Action :' . $action_type . ',Point:' . $point . ', Ledger data:' . json_encode( $ledger_data ) );
+		$ledger_status = $this->updatePointLedger( $ledger_data, $trans_type );
+		self::$woocommerce_helper->_log( 'Extra Action :' . $action_type . ',Point:' . $point . ', User data:' . json_encode( $_data ) );
+		if ( $ledger_status && self::$user_model->insertOrUpdate( $_data, $id ) ) {
+			$args = array(
+				'user_email'       => $action_data['user_email'],
+				'action_type'      => $action_type,
+				'campaign_type'    => 'point',
+				'points'           => (int) $point,
+				'transaction_type' => $trans_type,
+				'campaign_id'      => (int) isset( $action_data['campaign_id'] ) && ! empty( $action_data['campaign_id'] ) ? $action_data['campaign_id'] : 0,
+				'created_at'       => $created_at,
+				'modified_at'      => 0,
+				'product_id'       => (int) isset( $action_data['product_id'] ) && ! empty( $action_data['product_id'] ) ? $action_data['product_id'] : 0,
+				'order_id'         => (int) isset( $action_data['order_id'] ) && ! empty( $action_data['order_id'] ) ? $action_data['order_id'] : 0,
+				'order_currency'   => isset( $action_data['order_currency'] ) && ! empty( $action_data['order_currency'] ) ? $action_data['order_currency'] : '',
+				'order_total'      => isset( $action_data['order_total'] ) && ! empty( $action_data['order_total'] ) ? $action_data['order_total'] : '',
+				'referral_type'    => isset( $action_data['referral_type'] ) && ! empty( $action_data['referral_type'] ) ? $action_data['referral_type'] : '',
+				'display_name'     => isset( $action_data['reward_display_name'] ) && ! empty( $action_data['reward_display_name'] ) ? $action_data['reward_display_name'] : null,
+				'reward_id'        => (int) isset( $action_data['reward_id'] ) && ! empty( $action_data['reward_id'] ) ? $action_data['reward_id'] : 0,
+				'admin_user_id'    => null,
+				'log_data'         => '{}',
+				'customer_command' => isset( $action_data['customer_command'] ) && ! empty( $action_data['customer_command'] ) ? $action_data['customer_command'] : '',
+				'action_sub_type'  => isset( $action_data['action_sub_type'] ) && ! empty( $action_data['action_sub_type'] ) ? $action_data['action_sub_type'] : '',
+				'action_sub_value' => isset( $action_data['action_sub_value'] ) && ! empty( $action_data['action_sub_value'] ) ? $action_data['action_sub_value'] : '',
+			);
+			if ( is_admin() ) {
+				$admin_user            = wp_get_current_user();
+				$args['admin_user_id'] = $admin_user->ID;
+			}
+			try {
+				$earn_trans_id = 0;
+				if ( $point > 0 || $force_update_earn_campaign ) {
+					self::$woocommerce_helper->_log( 'Extra Action :' . $action_type . ',Point:' . $point . ', Earn Trans data:' . json_encode( $args ) );
+					$earn_trans_id = self::$earn_campaign_transaction_model->insertRow( $args );
+					self::$woocommerce_helper->_log( 'Extra Action :' . $action_type . ',Point:' . $point . ', Earn Trans id:' . $earn_trans_id );
+					$earn_trans_id = apply_filters( 'wlr_after_add_extra_earn_point_transaction', $earn_trans_id, $args );
+					if ( $earn_trans_id == 0 ) {
+						$status = false;
+					}
+				}
+				if ( $status ) {
+					$log_data = array(
+						'user_email'          => sanitize_email( $action_data['user_email'] ),
+						'action_type'         => $action_type,
+						'earn_campaign_id'    => (int) $earn_trans_id > 0 ? $earn_trans_id : 0,
+						'campaign_id'         => $args['campaign_id'],
+						'note'                => $ledger_data['note'],
+						'customer_note'       => isset( $action_data['customer_note'] ) && ! empty( $action_data['customer_note'] ) ? $action_data['customer_note'] : '',
+						'order_id'            => $args['order_id'],
+						'product_id'          => $args['product_id'],
+						'admin_id'            => $args['admin_user_id'],
+						'created_at'          => $created_at,
+						'modified_at'         => 0,
+						'points'              => (int) $point,
+						'action_process_type' => $ledger_data['action_process_type'],
+						'referral_type'       => isset( $action_data['referral_type'] ) && ! empty( $action_data['referral_type'] ) ? $action_data['referral_type'] : '',
+						'reward_id'           => (int) isset( $action_data['reward_id'] ) && ! empty( $action_data['reward_id'] ) ? $action_data['reward_id'] : 0,
+						'user_reward_id'      => (int) isset( $action_data['user_reward_id'] ) && ! empty( $action_data['user_reward_id'] ) ? $action_data['user_reward_id'] : 0,
+						'expire_email_date'   => isset( $action_data['expire_email_date'] ) && ! empty( $action_data['expire_email_date'] ) ? $action_data['expire_email_date'] : 0,
+						'expire_date'         => isset( $action_data['expire_date'] ) && ! empty( $action_data['expire_date'] ) ? $action_data['expire_date'] : 0,
+						'reward_display_name' => isset( $action_data['reward_display_name'] ) && ! empty( $action_data['reward_display_name'] ) ? $action_data['reward_display_name'] : null,
+						'required_points'     => (int) isset( $action_data['required_points'] ) && ! empty( $action_data['required_points'] ) ? $action_data['required_points'] : 0,
+						'discount_code'       => isset( $action_data['discount_code'] ) && ! empty( $action_data['discount_code'] ) ? $action_data['discount_code'] : null,
+					);
+					self::$woocommerce_helper->_log( 'Extra Action :' . $action_type . ',Point:' . $point . ', Log data:' . json_encode( $log_data ) );
+					$this->add_note( $log_data );
+				}
+			} catch ( Exception $e ) {
+				self::$woocommerce_helper->_log( 'Extra Action :' . $action_type . ',Point:' . $point . ', Trans/Log Exception:' . $e->getMessage() );
+				$status = false;
+			}
+		} else {
+			self::$woocommerce_helper->_log( 'Extra Action :' . $action_type . ',Point:' . $point . ', User save failed' );
+			$status = false;
+		}
+		self::$woocommerce_helper->_log( 'Extra Action :' . $action_type . ',Point:' . $point . ', Extra Action status:' . $status );
+		if ( $status ) {
+			\WC_Emails::instance();
+			do_action( 'wlr_after_add_extra_earn_point', $action_data['user_email'], $point, $action_type, $action_data );
+			do_action( 'wlr_notify_after_add_extra_earn_point', $action_data['user_email'], $point, $action_type, $action_data );
+		}
+
+		return $status;
+	}
+
+	function isValidExtraAction( $action_type ) {
+		$status       = false;
+		$action_types = $this->getExtraActionList();
+		if ( ! empty( $action_type ) && isset( $action_types[ $action_type ] ) && ! empty( $action_types[ $action_type ] ) ) {
+			$status = true;
+		}
+
+		return $status;
+	}
+
+	public function get_coupon_expiry_date( $expiry_date, $as_timestamp = false ) {
+		if ( ! empty( $expiry_date ) && '' != $expiry_date ) {
+			if ( $as_timestamp ) {
+				return strtotime( $expiry_date );
+			}
+
+			return date( 'Y-m-d', strtotime( $expiry_date ) );
+		}
+
+		return '';
 	}
 }

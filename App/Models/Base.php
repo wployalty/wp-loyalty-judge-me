@@ -60,6 +60,10 @@ abstract class Base {
 		);
 	}
 
+	function deleteRow( $where ) {
+		return self::$db->delete( $this->table, $where );
+	}
+
 	function getValidSearchWords( $terms ) {
 		$valid_terms = array();
 		$stopwords   = $this->getSearchStopWords();
