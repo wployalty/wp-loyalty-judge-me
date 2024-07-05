@@ -233,6 +233,34 @@ class Input {
 	}
 
 	/**
+	 * Fetch an item from POST data with fallback to GET
+	 *
+	 * @param $index
+	 * @param null $xss_clean
+	 * @param null $default
+	 *
+	 * @return mixed
+	 */
+	function post_get( $index, $default = null, $xss_clean = null ) {
+		return isset( $_POST[ $index ] )
+			? $this->post( $index, $default, $xss_clean )
+			: $this->get( $index, $default, $xss_clean );
+	}
+
+	/**
+	 * Fetch an item from the POST array
+	 *
+	 * @param null $index
+	 * @param null $default
+	 * @param null $xss_clean
+	 *
+	 * @return mixed
+	 */
+	function post( $index = null, $default = null, $xss_clean = null ) {
+		return $this->_fetch_from_array( $_POST, $index, $default, $xss_clean );
+	}
+
+	/**
 	 * Fetch from array
 	 *
 	 * @param $array

@@ -58,7 +58,7 @@ class Template {
 			}
 		}
 
-		return __( 'Template not found', 'wp-loyalty-rules' );
+		return __( 'Template not found', 'wp-loyalty-judge-me' );
 	}
 
 	/**

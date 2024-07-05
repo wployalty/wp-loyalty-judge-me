@@ -7,9 +7,15 @@
 
 namespace Wljm\App\Helpers;
 defined('ABSPATH') or die();
+
+use stdClass;
+use Wljm\App\Models\Rewards;
+use Wljm\App\Models\UserRewards;
+
 class EarnCampaign extends Base {
 	public static $instance = null;
-	public $earn_campaign;
+	public static $single_campaign = array();
+	public $earn_campaign, $available_conditions = array();
 	public static function getInstance( array $config = array() ) {
 		if ( ! self::$instance ) {
 			self::$instance = new self( $config );
@@ -84,10 +90,10 @@ class EarnCampaign extends Base {
 			'points'      => $point,
 			'action_type' => $action_type,
 			'note'        => $action_type != 'achievement'
-				? sprintf( __( '%s earned via %s', 'wp-loyalty-rules' ),
+				? sprintf( __( '%s earned via %s', 'wp-loyalty-judge-me' ),
 					$this->getPointLabel( $point ),
 					$this->getActionName( $action_type ) )
-				: sprintf( __( '%s %s earned via %s (%s)', 'wp-loyalty-rules' ),
+				: sprintf( __( '%s %s earned via %s (%s)', 'wp-loyalty-judge-me' ),
 					$point, $this->getPointLabel( $point ),
 					$this->getActionName( $action_type ),
 					$this->getAchievementName( $action_data['action_sub_type'] ) ),
@@ -183,10 +189,10 @@ class EarnCampaign extends Base {
 				return false;
 			}
 			$customer_note = $action_type != 'achievement'
-				? sprintf( __( '%s %s earned via %s', 'wp-loyalty-rules' ),
+				? sprintf( __( '%s %s earned via %s', 'wp-loyalty-judge-me' ),
 					$point, $this->getPointLabel( $point ),
 					$this->getActionName( $action_type ) )
-				: sprintf( __( '%s %s earned via %s (%s)', 'wp-loyalty-rules' ),
+				: sprintf( __( '%s %s earned via %s (%s)', 'wp-loyalty-judge-me' ),
 					$point, $this->getPointLabel( $point ),
 					$this->getActionName( $action_type ),
 					$this->getAchievementName( $action_data['action_sub_type'] ) );
@@ -250,6 +256,16 @@ class EarnCampaign extends Base {
 			$action_data['user_email'], $point, $action_type, $action_data );
 
 		return true;
+	}
+
+	function getActionEarning( $cart_action_list, $extra ) {
+		$reward_list = array();
+		foreach ( $cart_action_list as $action_type ) {
+			$reward_list[ $action_type ] = $this->getTotalEarning( $action_type,
+				array(), $extra );
+		}
+
+		return $reward_list;
 	}
 
 	function getCampaign( $campaign ) {
@@ -492,13 +508,13 @@ class EarnCampaign extends Base {
 				return false;
 			}
 			$action_data['user_reward_id'] = $user_reward_status;
-			//$customer_note = sprintf(__('%s %s earned via %s', 'wp-loyalty-rules'), $reward->display_name, $this->getRewardLabel(1), $this->getActionName($action_type));
+			//$customer_note = sprintf(__('%s %s earned via %s', 'wp-loyalty-judge-me'), $reward->display_name, $this->getRewardLabel(1), $this->getActionName($action_type));
 			$customer_note = $action_type != 'achievement'
-				? sprintf( __( '%s %s earned via %s', 'wp-loyalty-rules' ),
+				? sprintf( __( '%s %s earned via %s', 'wp-loyalty-judge-me' ),
 					$reward->display_name, $this->getRewardLabel( 1 ),
 					$this->getActionName( $action_type ) )
 				:
-				sprintf( __( '%s %s earned via %s (%s)', 'wp-loyalty-rules' ),
+				sprintf( __( '%s %s earned via %s (%s)', 'wp-loyalty-judge-me' ),
 					$reward->display_name, $this->getRewardLabel( 1 ),
 					$this->getActionName( $action_type ),
 					$this->getAchievementName( $action_data['action_sub_type'] ) );
@@ -641,6 +657,66 @@ class EarnCampaign extends Base {
 		return $status;
 	}
 
+	/**
+	 * Check free product out of stock status.
+	 *
+	 * @param boolean $status Instant coupon apply.
+	 * @param object $reward Reward data.
+	 *
+	 * @return bool
+	 */
+	function checkFreeProductCoupon( $status, $reward ) {
+		if ( ! isset( $reward->id ) || $reward->id <= 0 ) {
+			return $status;
+		}
+		$reward_modal = new Rewards();
+		$reward_data  = $reward_modal->getByKey( $reward->id );
+		if ( empty( $reward_data )
+		     || $reward_data->discount_type != "free_product"
+		) {
+			return $status;
+		}
+		$free_products
+			= self::$woocommerce_helper->isJson( $reward_data->free_product ) ?
+			json_decode( $reward_data->free_product, true ) : [];
+		if ( empty( $free_products ) ) {
+			return $status;
+		}
+		foreach ( $free_products as $f_product ) {
+			$product = wc_get_product( $f_product['value'] );
+			if ( $product && ! $product->is_in_stock() ) {
+				return false;
+			}
+		}
+
+		return $status;
+	}
+
+	protected function processCampaignAction(
+		$action_type, $type, $campaign, $data
+	) {
+		if ( empty( $type ) ) {
+			return null;
+		}
+		$reward = array();
+		if ( $type == 'point' ) {
+			$reward = 0;
+		}
+		if ( empty( $action_type ) ) {
+			return $reward;
+		}
+		if ( isset( $data['action_type'] ) && ! empty( $data['action_type'] )
+		     && $action_type == $data['action_type']
+		) {
+			$action_type = trim( $action_type );
+			$reward      = apply_filters( 'wlr_earn_' . strtolower( $type )
+			                              . '_' . strtolower( $action_type ),
+				$reward, $campaign, $data );
+		}
+
+		return $reward;
+	}
+
 	function getCampaignPoint( $data ) {
 		/**
 		 * 1. Check level, active
@@ -694,6 +770,15 @@ class EarnCampaign extends Base {
 		}
 
 		return $status;
+	}
+
+	private function processCampaignPoint( $data ) {
+		if ( ! is_array( $data ) || empty( $data['action_type'] ) ) {
+			return 0;
+		}
+
+		return $this->processCampaignAction( trim( $data['action_type'] ),
+			'point', $this, $data );
 	}
 
 	function processCampaignCondition( $data, $is_product_level = false ) {
@@ -802,6 +887,70 @@ class EarnCampaign extends Base {
 		return $status;
 	}
 
+	function getConditions() {
+		if ( $this->hasConditions() ) {
+			return json_decode( $this->earn_campaign->conditions );
+		}
+
+		return false;
+	}
+
+	protected function hasConditions() {
+		$status = false;
+		if ( isset( $this->earn_campaign->conditions ) ) {
+			$status = true;
+			if ( empty( $this->earn_campaign->conditions )
+			     || $this->earn_campaign->conditions == '{}'
+			     || $this->earn_campaign->conditions == '[]'
+			) {
+				$status = false;
+			}
+		}
+
+		return apply_filters( 'wlr_has_earn_campaign_conditions', $status,
+			$this->earn_campaign );
+	}
+
+	public function getAvailableConditions() {
+		$available_conditions = array();
+		//Read the conditions directory and create condition object
+		if ( file_exists( WLJM_PLUGIN_PATH . 'App/Conditions/' ) ) {
+			$conditions_list = array_slice( scandir( WLJM_PLUGIN_PATH
+			                                         . 'App/Conditions/' ), 2 );
+			if ( ! empty( $conditions_list ) ) {
+				foreach ( $conditions_list as $condition ) {
+					$class_name = basename( $condition, '.php' );
+					if ( $class_name == 'Base' ) {
+						continue;
+					}
+					$condition_class_name = 'Wljm\App\Conditions\\'
+					                        . $class_name;
+					if ( ! class_exists( $condition_class_name ) ) {
+						continue;
+					}
+					$condition_object = new $condition_class_name();
+					if ( $condition_object instanceof
+					     \Wljm\App\Conditions\Base
+					) {
+						$condition_name = $condition_object->name();
+						if ( ! empty( $condition_name ) ) {
+							$available_conditions[ $condition_name ] = array(
+								'object'       => $condition_object,
+								'label'        => $condition_object->label,
+								'group'        => $condition_object->group,
+								'extra_params' => $condition_object->extra_params,
+							);
+						}
+					}
+				}
+			}
+		}
+		$this->available_conditions = apply_filters( 'wlr_available_conditions',
+			$available_conditions );
+
+		return $this->available_conditions;
+	}
+
 	function getCampaignReward( $data ) {
 		/**
 		 * 1. Check level, active
@@ -842,6 +991,18 @@ class EarnCampaign extends Base {
 		$rewards = array();
 		if ( $status ) {
 			$rewards = $this->processCampaignRewards( $data );
+		}
+
+		return $rewards;
+	}
+	function processCampaignRewards( $data ) {
+		$rewards = array();
+		if ( isset( $data['action_type'] )
+		     && ! empty( $data['action_type'] )
+		) {
+			$action_type = trim( $data['action_type'] );
+			$rewards     = $this->processCampaignAction( $action_type, 'coupon',
+				$this, $data );
 		}
 
 		return $rewards;

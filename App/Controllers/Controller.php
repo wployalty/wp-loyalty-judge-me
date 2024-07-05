@@ -7,10 +7,11 @@
 
 namespace Wljm\App\Controllers;
 
-use Wlr\App\Helpers\EarnCampaign;
-use Wlr\App\Helpers\Input;
-use Wlr\App\Helpers\Template;
-use Wlr\App\Helpers\Woocommerce;
+use Wljm\App\Helpers\EarnCampaign;
+use Wljm\App\Helpers\Input;
+use Wljm\App\Helpers\Template;
+use Wljm\App\Helpers\Woocommerce;
+use Wljm\App\Premium\Helpers\ProductReview;
 
 defined('ABSPATH') or die;
 
@@ -316,7 +317,7 @@ class Controller
             //need to earn point after create review
             if ($prod_id > 0 && !empty($reviewer_email) && filter_var($reviewer_email, FILTER_VALIDATE_EMAIL)) {
                 $woocommerce = new Woocommerce();
-                $product_review_helper = new \Wlr\App\Premium\Helpers\ProductReview();
+                $product_review_helper = new ProductReview();
                 $action_data = array(
                     'user_email' => $reviewer_email,
                     'product_id' => $prod_id,
@@ -348,7 +349,7 @@ class Controller
             //need to earn point after create review
             if ($prod_id > 0 && !empty($reviewer_email) && filter_var($reviewer_email, FILTER_VALIDATE_EMAIL)) {
                 $woocommerce = new Woocommerce();
-                $product_review_helper = new \Wlr\App\Premium\Helpers\ProductReview();
+                $product_review_helper = new ProductReview();
                 $action_data = array(
                     'user_email' => $reviewer_email,
                     'product_id' => $prod_id,

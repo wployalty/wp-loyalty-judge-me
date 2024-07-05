@@ -1,11 +1,18 @@
 <?php
 
 namespace Wljm\App\Premium\Helpers;
+defined('ABSPATH') or die();
 
 use Wljm\App\Helpers\Base;
 use Wljm\App\Helpers\EarnCampaign;
-
+use Wljm\App\Helpers\Woocommerce;
 class ProductReview extends Base {
+	public static $instance = null;
+
+	public function __construct( $config = array() ) {
+		parent::__construct( $config );
+	}
+
 	function applyEarnProductReview( $action_data ) {
 		if ( ! is_array( $action_data ) || empty( $action_data['user_email'] ) ) {
 			return false;
@@ -31,6 +38,40 @@ class ProductReview extends Base {
 		}
 
 		return $status;
+	}
+
+	function processMessage( $point_rule, $earning ) {
+		$point             = isset( $earning['point'] ) && ! empty( $earning['point'] ) ? (int) $earning['point'] : 0;
+		$rewards           = isset( $earning['rewards'] ) && ! empty( $earning['rewards'] ) ? (array) $earning['rewards'] : array();
+		$available_rewards = '';
+		foreach ( $rewards as $single_reward ) {
+			if ( is_object( $single_reward ) && isset( $single_reward->display_name ) ) {
+				$available_rewards .= __( $single_reward->display_name, 'wp-loyalty-judge-me' ) . ',';
+			}
+		}
+		$available_rewards = trim( $available_rewards, ',' );
+		$reward_count      = 0;
+		if ( ! empty( $available_rewards ) ) {
+			$reward_count = count( explode( ',', $available_rewards ) );
+		}
+		$display_message = '';
+		if ( ( $point > 0 || ! empty( $available_rewards ) ) ) {
+			$message        = '';
+			$review_message = isset( $point_rule->review_message ) && ! empty( $point_rule->review_message ) ? __( $point_rule->review_message, 'wp-loyalty-judge-me' ) : '';
+			if ( ! empty( $review_message ) ) {
+				$message = '<span class="wlr-product-review-message">' . Woocommerce::getCleanHtml( $review_message ) . '</span>';
+			}
+			$point           = $this->roundPoints( $point );
+			$short_code_list = array(
+				'{wlr_points}'       => $point > 0 ? self::$woocommerce_helper->numberFormatI18n( $point ) : '',
+				'{wlr_points_label}' => $this->getPointLabel( $point ),
+				'{wlr_reward_label}' => $this->getRewardLabel( $reward_count ),
+				'{wlr_rewards}'      => $available_rewards
+			);
+			$display_message = $this->processShortCodes( $short_code_list, $message );
+		}
+
+		return $display_message;
 	}
 
 }

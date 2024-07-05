@@ -20,6 +20,13 @@ abstract class Base {
 		return self::$db->prefix;
 	}
 
+	function getByKey( $key ) {
+		$key   = sanitize_key( $key );
+		$query = self::$db->prepare( "SELECT * FROM {$this->table} WHERE `{$this->primary_key}` = %d;", array( $key ) );
+
+		return self::$db->get_row( $query, OBJECT );
+	}
+
 	function getWhere( $where, $select = '*', $single = true ) {
 		if ( is_array( $select ) || is_object( $select ) ) {
 			$select = implode( ',', $select );
@@ -128,6 +135,51 @@ abstract class Base {
 		}
 
 		return $this->getWhere( $campaign_where, $select, $is_single );
+	}
+
+	function insertRow( $data ) {
+		if ( ! empty( $this->fields ) ) {
+			$columns       = implode( '`,`', array_keys( $this->fields ) );
+			$values        = implode( ',', $this->fields );
+			$actual_values = $this->formatData( $data );
+			$query         = self::$db->prepare( "INSERT INTO {$this->table} (`{$columns}`) VALUES ({$values});", $actual_values );
+			self::$db->query( $query );
+
+			return self::$db->insert_id;
+		}
+
+		return 0;
+	}
+
+	function updateRow( $data, $where = array() ) {
+		if ( empty( $data ) || ! is_array( $data ) ) {
+			return false;
+		}
+
+		return self::$db->update( $this->table, $data, $where );
+	}
+
+	function formatData( $data ) {
+		if ( empty( $this->fields ) ) {
+			return array();
+		}
+		$result = array();
+		foreach ( $this->fields as $key => $value ) {
+			$key = trim( $key );
+			if ( '%d' == trim( $value ) ) {
+				$value = intval( isset( $data[ $key ] ) ? $data[ $key ] : 0 );
+			} elseif ( '%f' == trim( $value ) ) {
+				$value = floatval( isset( $data[ $key ] ) ? $data[ $key ] : 0 );
+			} else {
+				$value = isset( $data[ $key ] ) ? $data[ $key ] : null;
+				if ( is_array( $value ) || is_object( $value ) ) {
+					$value = json_encode( $value );
+				}
+			}
+			$result[ $key ] = $value;
+		}
+
+		return $result;
 	}
 
 }

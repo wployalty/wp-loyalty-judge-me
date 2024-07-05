@@ -23,7 +23,7 @@ class Router
             add_action('network_admin_menu', array(self::$controller, 'addMenu'));
             add_action('admin_enqueue_scripts', array(self::$controller, 'adminScripts'), 100);
             add_action('admin_footer', array(self::$controller, 'menuHideProperties'));
-            //add_action('wp_ajax_wljm_save_settings', array(self::$controller, 'saveSettings'));
+            add_action('wp_ajax_wljm_save_settings', array(self::$controller, 'saveSettings'));
             add_action('wp_ajax_wljm_webhook_delete', array(self::$controller, 'deleteWebHook'));
             add_action('wp_ajax_wljm_webhook_create', array(self::$controller, 'createWebHook'));
         } /*else {
