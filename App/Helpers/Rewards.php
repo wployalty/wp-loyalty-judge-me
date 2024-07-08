@@ -30,7 +30,7 @@ class Rewards extends EarnCampaign {
 			self::$woocommerce_helper->setSession( 'wlr_discount_code', $user_reward->discount_code );
 			$cart = self::$woocommerce_helper->getCart();
 			if ( empty( $cart->get_cart() ) && apply_filters( 'wlr_show_coupon_will_apply_message', true, $user_reward ) ) {
-				wc_add_notice( __( 'Coupon will apply, when cart have items', 'wp-loyalty-rules' ) );
+				wc_add_notice( __( 'Coupon will apply, when cart have items', 'wp-loyalty-judge-me' ) );
 			}
 			//WC()->cart->apply_coupon($user_reward->discount_code);
 		} else {
@@ -100,7 +100,7 @@ class Rewards extends EarnCampaign {
 					$status = $user_reward_model->updateRow( $updateData, $where );
 					if ( $status >= 0 ) {
 						$earn_campaign = new EarnCampaign();
-						$customer_note = sprintf( __( '%s coupon created for %s from %s reward', 'wp-loyalty-rules' ), $coupon_code, $user_reward->email, $user_reward->display_name );
+						$customer_note = sprintf( __( '%s coupon created for %s from %s reward', 'wp-loyalty-judge-me' ), $coupon_code, $user_reward->email, $user_reward->display_name );
 						$log_data      = array(
 							'user_email'          => sanitize_email( $user_email ),
 							'action_type'         => $user_reward->action_type,
@@ -256,12 +256,12 @@ class Rewards extends EarnCampaign {
 			$data = apply_filters( 'wlr_create_coupon_data', $data, $this );
 			// Check if coupon code is specified
 			if ( ! isset( $data['code'] ) ) {
-				throw new Exception( sprintf( __( 'Missing parameter %s', 'wp-loyalty-rules' ), 'code' ), 400 );
+				throw new Exception( sprintf( __( 'Missing parameter %s', 'wp-loyalty-judge-me' ), 'code' ), 400 );
 			}
 			$coupon_code  = wc_format_coupon_code( $data['code'] );
 			$id_from_code = wc_get_coupon_id_by_code( $coupon_code );
 			if ( $id_from_code ) {
-				throw new Exception( __( 'The coupon code already exists', 'wp-loyalty-rules' ), 400 );
+				throw new Exception( __( 'The coupon code already exists', 'wp-loyalty-judge-me' ), 400 );
 			}
 			$defaults    = array(
 				'type'                         => 'fixed_cart',
@@ -286,7 +286,7 @@ class Rewards extends EarnCampaign {
 			$coupon_data = wp_parse_args( $data, $defaults );
 			// Validate coupon types
 			if ( ! in_array( wc_clean( $coupon_data['type'] ), array_keys( wc_get_coupon_types() ) ) ) {
-				throw new Exception( sprintf( __( 'Invalid coupon type - the coupon type must be any of these: %s', 'wp-loyalty-rules' ), implode( ', ', array_keys( wc_get_coupon_types() ) ) ), 400 );
+				throw new Exception( sprintf( __( 'Invalid coupon type - the coupon type must be any of these: %s', 'wp-loyalty-judge-me' ), implode( ', ', array_keys( wc_get_coupon_types() ) ) ), 400 );
 			}
 			$new_coupon = array(
 				'post_title'   => $coupon_code,

@@ -26,20 +26,35 @@ wljm_jquery(document).on('click', '#wljm-main-page #wljm-webhook-delete', functi
         error: function (request, error) {
         },
         success: function (json) {
-            alertify.set('notifier', 'position', 'top-right');
             button.attr('disabled', false);
             button.html(wljm_localize_data.delete_button_label);
             if (json.success == true) {
-                alertify.success(json.message);
+                createToast('success',  json.message);
                 setTimeout(function () {
                     location.reload();
                 }, 800);
             } else if (json.success == false) {
-                alertify.error(json.message);
+                createToast('error', json.message);
             }
         }
     });
 });
+function createToast(type, text) {
+    let newToast = document.createElement('div');
+    newToast.classList.add('wljm-toast', type);
+    newToast.innerHTML = `
+        <div class="wljm-content">
+            <span class="wljm-toast-msg">${text}</span>
+        </div>
+    `;
+    document.querySelector('.wljm-notification').appendChild(newToast);
+    newToast.timeOut = setTimeout(function() {
+        newToast.style.animation = 'hide 0.3s ease 1 forwards';
+        newToast.addEventListener('animationend', () => {
+            newToast.remove();
+        });
+    }, 3000);
+}
 
 wljm_jquery(document).on('click', '#wljm-main-page #wljm-webhook-create', function () {
     let webhook_key = wljm_jquery(this).data('webhook-key');
@@ -57,16 +72,15 @@ wljm_jquery(document).on('click', '#wljm-main-page #wljm-webhook-create', functi
         error: function (request, error) {
         },
         success: function (json) {
-            alertify.set('notifier', 'position', 'top-right');
             button.attr('disabled', false);
             button.html(wljm_localize_data.create_button_label);
             if (json.success == true) {
-                alertify.success(json.message);
+                createToast('success',  json.message);
                 setTimeout(function () {
                     location.reload();
                 }, 800);
             } else if (json.success == false) {
-                alertify.error(json.message);
+                createToast('error', json.message);
             }
         }
     });
