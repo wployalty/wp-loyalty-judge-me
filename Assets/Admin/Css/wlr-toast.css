@@ -1,10 +1,10 @@
-.wljm-notification{
+.wlr-toast-notification{
     position: fixed;
     top: 50px;
     right: 20px;
     z-index: 100;
 }
-.wljm-toast{
+.wlr-toast{
     position: relative;
     padding: 15px 45px 15px 45px !important;
     margin-bottom: 10px;
@@ -13,7 +13,7 @@
     animation: show 0.3s ease 1 forwards;
 }
 
-.wljm-toast .wljm-toast-msg{
+.wlr-toast .wlr-toast-msg{
     color: #fff;
     font-weight: bolder;
 }
@@ -29,7 +29,7 @@
       }
 }
 
-.wljm-toast::before{
+.wlr-toast::before{
     position: absolute;
     bottom: 0;
     left: 0;
@@ -43,16 +43,16 @@
         width: 0;
     }
 }
-.wljm-toast.success::before{
+.wlr-toast.wlr-success::before{
     background: seagreen;
 }
-.wljm-toast.error::before{
+.wlr-toast.wlr-error::before{
     background: darkred;
 }
-.wljm-toast.success{
+.wlr-toast.wlr-success{
     background-color: rgba(91, 189, 114, 0.95);
 }
-.wljm-toast.error{
+.wlr-toast.wlr-error{
     border-left-color: rgba(217, 92, 92, 0.50);
     background-color: rgba(217, 92, 92, 0.95);
 }

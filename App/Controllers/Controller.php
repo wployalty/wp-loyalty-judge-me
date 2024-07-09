@@ -104,8 +104,9 @@ class Controller
         }
         $this->removeAdminNotice();
         wp_enqueue_style(WLJM_PLUGIN_SLUG . '-wljm-admin', WLJM_PLUGIN_URL . 'Assets/Admin/Css/wljm-admin.css', array(), WLJM_PLUGIN_VERSION . '&t=' . time());
-        wp_enqueue_style(WLJM_PLUGIN_SLUG . '-wljm-toast', WLJM_PLUGIN_URL . 'Assets/Admin/Css/wljm-toast.css', array(), WLJM_PLUGIN_VERSION . '&t=' . time());
+        wp_enqueue_style(WLJM_PLUGIN_SLUG . '-wlr-toast', WLJM_PLUGIN_URL . 'Assets/Admin/Css/wlr-toast.css', array(), WLJM_PLUGIN_VERSION . '&t=' . time());
         wp_enqueue_script(WLJM_PLUGIN_SLUG . '-wljm-admin', WLJM_PLUGIN_URL . 'Assets/Admin/Js/wljm-admin.js', array(), WLJM_PLUGIN_VERSION . '&t=' . time());
+        wp_enqueue_script(WLJM_PLUGIN_SLUG . '-wlr-toast', WLJM_PLUGIN_URL . 'Assets/Admin/Js/wlr-toast.js', array(), WLJM_PLUGIN_VERSION . '&t=' . time());
         wp_enqueue_style(WLJM_PLUGIN_SLUG . '-wlr-font', WLJM_PLUGIN_SLUG . 'Assets/Site/Css/wlr-fonts.min.css', array(), WLJM_PLUGIN_SLUG);
         $localize = array(
             'home_url' => get_home_url(),
