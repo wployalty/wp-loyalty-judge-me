@@ -8,12 +8,12 @@ use Wljm\App\Models\PointsLedger;
 use Wljm\App\Models\UserRewards;
 use Wljm\App\Models\Users;
 use Exception;
+
 class Base {
-	public static $woocommerce_helper, $user_model, $earn_campaign_transaction_model, $user_by_email;
+	public static $user_model, $earn_campaign_transaction_model, $user_by_email;
 	public static $user_reward_by_coupon = array();
 
 	public function __construct( $config = array() ) {
-		self::$woocommerce_helper              = empty( self::$woocommerce_helper ) ? Woocommerce::getInstance() : self::$woocommerce_helper;
 		self::$user_model                      = empty( self::$user_model ) ? new Users() : self::$user_model;
 		self::$earn_campaign_transaction_model = empty( self::$earn_campaign_transaction_model ) ? new EarnCampaignTransactions() : self::$earn_campaign_transaction_model;
 	}
@@ -37,9 +37,16 @@ class Base {
 		return apply_filters( 'wlr_is_eligible_for_earning', true, $action_type, $extra );
 	}
 
-	function getTotalEarning( $action_type = '', $ignore_condition = array(), $extra = array(), $is_product_level = false ) {
-		$earning = array();
-		if ( ! $this->is_valid_action( $action_type ) || ! $this->isEligibleForEarn( $action_type, $extra ) || self::$woocommerce_helper->isBannedUser() ) {
+	function getTotalEarning(
+		$action_type = '',
+		$ignore_condition = array(),
+		$extra = array(),
+		$is_product_level = false
+	) {
+		$earning            = array();
+		$woocommerce_helper = Woocommerce::getInstance();
+		if ( ! $this->is_valid_action( $action_type ) || ! $this->isEligibleForEarn( $action_type,
+				$extra ) || $woocommerce_helper->isBannedUser() ) {
 			return $earning;
 		}
 		$campaign_helper     = EarnCampaign::getInstance();
@@ -59,13 +66,13 @@ class Base {
 			}
 			$action_data = apply_filters( 'wlr_before_rule_data_process', $action_data, $campaign_list );
 			$order_id    = isset( $action_data['order'] ) && ! empty( $action_data['order'] ) ? $action_data['order']->get_id() : 0;
-			self::$woocommerce_helper->_log( 'getTotalEarning Action data:' . json_encode( $action_data ) );
+			$woocommerce_helper->_log( 'getTotalEarning Action data:' . json_encode( $action_data ) );
 			$social_share = $this->getSocialActionList();
 			foreach ( $campaign_list as $campaign ) {
 				$processing_campaign = $campaign_helper->getCampaign( $campaign );
 				$campaign_id         = isset( $processing_campaign->earn_campaign->id ) && $processing_campaign->earn_campaign->id > 0 ? $processing_campaign->earn_campaign->id : 0;
 				if ( $campaign_id && $order_id ) {
-					self::$woocommerce_helper->_log( 'getTotalEarning Action:' . $action_type . ',Campaign id:' . $campaign_id . ', Before check user already earned' );
+					$woocommerce_helper->_log( 'getTotalEarning Action:' . $action_type . ',Campaign id:' . $campaign_id . ', Before check user already earned' );
 					if ( $this->checkUserEarnedInCampaignFromOrder( $order_id, $campaign_id ) ) {
 						continue;
 					}
@@ -74,29 +81,31 @@ class Base {
 				$campaign_earning           = array();
 				if ( isset( $processing_campaign->earn_campaign->campaign_type ) && 'point' === $processing_campaign->earn_campaign->campaign_type ) {
 					//campaign_id and order_id
-					self::$woocommerce_helper->_log( 'getTotalEarning Action:' . $action_type . ',Campaign id:' . $campaign_id . ', Before earn point:' . json_encode( $action_data ) );
+					$woocommerce_helper->_log( 'getTotalEarning Action:' . $action_type . ',Campaign id:' . $campaign_id . ', Before earn point:' . json_encode( $action_data ) );
 					$campaign_earning['point']         = $processing_campaign->getCampaignPoint( $action_data );
 					$earning[ $campaign->id ]['point'] = $campaign_earning['point'];
 				} elseif ( isset( $processing_campaign->earn_campaign->campaign_type ) && 'coupon' === $processing_campaign->earn_campaign->campaign_type ) {
-					self::$woocommerce_helper->_log( 'getTotalEarning Action:' . $action_type . ',Campaign id:' . $campaign_id . ', Before earn coupon:' . json_encode( $action_data ) );
+					$woocommerce_helper->_log( 'getTotalEarning Action:' . $action_type . ',Campaign id:' . $campaign_id . ', Before earn coupon:' . json_encode( $action_data ) );
 					$earning[ $campaign->id ]['rewards'][] = $campaign_earning['rewards'][] = $processing_campaign->getCampaignReward( $action_data );
 				}
-				$earning[ $campaign->id ]['messages'] = $this->processCampaignMessage( $action_type, $processing_campaign, $campaign_earning );
+				$earning[ $campaign->id ]['messages'] = $this->processCampaignMessage( $action_type,
+					$processing_campaign, $campaign_earning );
 				if ( in_array( $action_type, $social_share ) ) {
 					$earning[ $campaign->id ]['icon'] = isset( $processing_campaign->earn_campaign->icon ) && ! empty( $processing_campaign->earn_campaign->icon ) ? $processing_campaign->earn_campaign->icon : '';
 				}
 			}
-			self::$woocommerce_helper->_log( 'getTotalEarning Action:' . $action_type . ', Total earning:' . json_encode( $earning ) );
+			$woocommerce_helper->_log( 'getTotalEarning Action:' . $action_type . ', Total earning:' . json_encode( $earning ) );
 		}
 
 		return $earning;
 	}
 
 	function processCampaignMessage( $action_type, $rule, $earning ) {
-		$messages = array();
+		$messages           = array();
+		$woocommerce_helper = Woocommerce::getInstance();
 		if ( ! empty( $action_type ) && $action_type === $rule->earn_campaign->action_type ) {
 			if ( isset( $rule->earn_campaign->point_rule ) && ! empty( $rule->earn_campaign->point_rule ) ) {
-				if ( self::$woocommerce_helper->isJson( $rule->earn_campaign->point_rule ) ) {
+				if ( $woocommerce_helper->isJson( $rule->earn_campaign->point_rule ) ) {
 					$point_rule        = json_decode( $rule->earn_campaign->point_rule );
 					$class_name        = ucfirst( $this->camelCaseAction( $action_type ) );
 					$class_free_helper = '\\Wljm\\App\\Helpers\\' . $class_name;
@@ -136,8 +145,10 @@ class Base {
 
 	public function getRewardLabel( $reward_count = 0 ) {
 		$setting_option = get_option( 'wlr_settings', '' );
-		$singular       = ( isset( $setting_option['reward_singular_label'] ) && ! empty( $setting_option['reward_singular_label'] ) ) ? __( $setting_option['reward_singular_label'], 'wp-loyalty-judge-me' ) : __( 'reward', 'wp-loyalty-judge-me' );
-		$plural         = ( isset( $setting_option['reward_plural_label'] ) && ! empty( $setting_option['reward_plural_label'] ) ) ? __( $setting_option['reward_plural_label'], 'wp-loyalty-judge-me' ) : __( 'rewards', 'wp-loyalty-judge-me' );
+		$singular       = ( isset( $setting_option['reward_singular_label'] ) && ! empty( $setting_option['reward_singular_label'] ) ) ? __( $setting_option['reward_singular_label'],
+			'wp-loyalty-judge-me' ) : __( 'reward', 'wp-loyalty-judge-me' );
+		$plural         = ( isset( $setting_option['reward_plural_label'] ) && ! empty( $setting_option['reward_plural_label'] ) ) ? __( $setting_option['reward_plural_label'],
+			'wp-loyalty-judge-me' ) : __( 'rewards', 'wp-loyalty-judge-me' );
 		$reward_label   = ( $reward_count == 0 || $reward_count > 1 ) ? $plural : $singular;
 
 		return apply_filters( 'wlr_get_reward_label', $reward_label, $reward_count );
@@ -164,10 +175,12 @@ class Base {
 		if ( $is_cart && function_exists( 'WC' ) && isset( WC()->cart->applied_coupons ) && ! empty( WC()->cart->applied_coupons ) ) {
 			$coupons = WC()->cart->applied_coupons;
 		} elseif ( ! empty( $order ) ) {
-			$order = self::$woocommerce_helper->getOrder( $order );
-			$items = self::$woocommerce_helper->isMethodExists( $order, 'get_items' ) ? $order->get_items( 'coupon' ) : [];
+			$woocommerce_helper = Woocommerce::getInstance();
+			$order              = $woocommerce_helper->getOrder( $order );
+			$items              = $woocommerce_helper->isMethodExists( $order,
+				'get_items' ) ? $order->get_items( 'coupon' ) : [];
 			foreach ( $items as $item ) {
-				if ( self::$woocommerce_helper->isMethodExists( $item, 'get_code' ) ) {
+				if ( $woocommerce_helper->isMethodExists( $item, 'get_code' ) ) {
 					$coupons[] = $item->get_code();
 				}
 			}
@@ -227,7 +240,8 @@ class Base {
 		if ( empty( $action_type ) ) {
 			return $action_name;
 		}
-		$action_types = self::$woocommerce_helper->getActionTypes();
+		$woocommerce_helper = Woocommerce::getInstance();
+		$action_types       = $woocommerce_helper->getActionTypes();
 		if ( isset( $action_types[ $action_type ] ) ) {
 			$action_name = $action_types[ $action_type ];
 		}
@@ -320,9 +334,10 @@ class Base {
 
 	function getReferralUrl( $code = '' ) {
 		if ( empty( $code ) ) {
-			$user_email = self::$woocommerce_helper->get_login_user_email();
-			$user       = $this->getPointUserByEmail( $user_email );
-			$code       = ! empty( $user ) && isset( $user->refer_code ) && ! empty( $user->refer_code ) ? $user->refer_code : '';
+			$woocommerce_helper = Woocommerce::getInstance();
+			$user_email         = $woocommerce_helper->get_login_user_email();
+			$user               = $this->getPointUserByEmail( $user_email );
+			$code               = ! empty( $user ) && isset( $user->refer_code ) && ! empty( $user->refer_code ) ? $user->refer_code : '';
 		}
 		$url = '';
 		if ( ! empty( $code ) ) {
@@ -382,13 +397,15 @@ class Base {
 	function getExtraActionList() {
 		$action_list = array(
 			'admin_change'             => __( 'Admin updated', 'wp-loyalty-judge-me' ),
-			'redeem_point'             => sprintf( __( 'Convert %s to coupon', 'wp-loyalty-judge-me' ), $this->getPointLabel( 3 ) ),
+			'redeem_point'             => sprintf( __( 'Convert %s to coupon', 'wp-loyalty-judge-me' ),
+				$this->getPointLabel( 3 ) ),
 			'new_user_add'             => __( 'New Customer', 'wp-loyalty-judge-me' ),
 			'import'                   => __( 'Import Customer', 'wp-loyalty-judge-me' ),
 			'revoke_coupon'            => __( 'Revoke coupon', 'wp-loyalty-judge-me' ),
 			'expire_date_change'       => __( 'Expiry date has been changed manually', 'wp-loyalty-judge-me' ),
 			'expire_email_date_change' => __( 'Expiry email date has been changed manually', 'wp-loyalty-judge-me' ),
-			'expire_point'             => sprintf( __( '%s Expired', 'wp-loyalty-judge-me' ), $this->getPointLabel( 3 ) ),
+			'expire_point'             => sprintf( __( '%s Expired', 'wp-loyalty-judge-me' ),
+				$this->getPointLabel( 3 ) ),
 			'new_level'                => __( 'New Level', 'wp-loyalty-judge-me' ),
 			'rest_api'                 => __( 'REST API', 'wp-loyalty-judge-me' ),
 			'birthday_change'          => __( 'Birthday change', 'wp-loyalty-judge-me' )
@@ -461,8 +478,9 @@ class Base {
 	}
 
 	function is_valid_action( $action_type ) {
-		$status       = false;
-		$action_types = self::$woocommerce_helper->getActionTypes();
+		$status             = false;
+		$woocommerce_helper = Woocommerce::getInstance();
+		$action_types       = $woocommerce_helper->getActionTypes();
 		if ( ! empty( $action_type ) && isset( $action_types[ $action_type ] ) && ! empty( $action_types[ $action_type ] ) ) {
 			$status = true;
 		}
@@ -471,7 +489,8 @@ class Base {
 	}
 
 	function isIncludingTax() {
-		$setting_option       = self::$woocommerce_helper->getOptions( 'wlr_settings', array() );
+		$woocommerce_helper   = Woocommerce::getInstance();
+		$setting_option       = $woocommerce_helper->getOptions( 'wlr_settings', array() );
 		$tax_calculation_type = ( isset( $setting_option['tax_calculation_type'] ) && ! empty( $setting_option['tax_calculation_type'] ) ) ? $setting_option['tax_calculation_type'] : 'inherit';
 		$is_including_tax     = false;
 		if ( $tax_calculation_type == 'inherit' ) {
@@ -483,8 +502,17 @@ class Base {
 		return $is_including_tax;
 	}
 
-	function addExtraPointAction( $action_type, $point, $action_data, $trans_type = 'credit', $is_update_used_point = false, $force_update_earn_campaign = false, $update_earn_total_point = true ) {
-		self::$woocommerce_helper->_log( 'Extra Action :' . $action_type . ',Point:' . $point . ', Trans:' . $trans_type );
+	function addExtraPointAction(
+		$action_type,
+		$point,
+		$action_data,
+		$trans_type = 'credit',
+		$is_update_used_point = false,
+		$force_update_earn_campaign = false,
+		$update_earn_total_point = true
+	) {
+		$woocommerce_helper = Woocommerce::getInstance();
+		$woocommerce_helper->_log( 'Extra Action :' . $action_type . ',Point:' . $point . ', Trans:' . $trans_type );
 		if ( ! is_array( $action_data ) || $point < 0 || empty( $action_data['user_email'] ) || empty( $action_type ) || ! $this->isValidExtraAction( $action_type ) ) {
 			return false;
 		}
@@ -564,9 +592,9 @@ class Base {
 			'note'                => isset( $action_data['note'] ) && ! empty( $action_data['note'] ) ? $action_data['note'] : '',
 			'created_at'          => $created_at,
 		);
-		self::$woocommerce_helper->_log( 'Extra Action :' . $action_type . ',Point:' . $point . ', Ledger data:' . json_encode( $ledger_data ) );
+		$woocommerce_helper->_log( 'Extra Action :' . $action_type . ',Point:' . $point . ', Ledger data:' . json_encode( $ledger_data ) );
 		$ledger_status = $this->updatePointLedger( $ledger_data, $trans_type );
-		self::$woocommerce_helper->_log( 'Extra Action :' . $action_type . ',Point:' . $point . ', User data:' . json_encode( $_data ) );
+		$woocommerce_helper->_log( 'Extra Action :' . $action_type . ',Point:' . $point . ', User data:' . json_encode( $_data ) );
 		if ( $ledger_status && self::$user_model->insertOrUpdate( $_data, $id ) ) {
 			$args = array(
 				'user_email'       => $action_data['user_email'],
@@ -597,10 +625,11 @@ class Base {
 			try {
 				$earn_trans_id = 0;
 				if ( $point > 0 || $force_update_earn_campaign ) {
-					self::$woocommerce_helper->_log( 'Extra Action :' . $action_type . ',Point:' . $point . ', Earn Trans data:' . json_encode( $args ) );
+					$woocommerce_helper->_log( 'Extra Action :' . $action_type . ',Point:' . $point . ', Earn Trans data:' . json_encode( $args ) );
 					$earn_trans_id = self::$earn_campaign_transaction_model->insertRow( $args );
-					self::$woocommerce_helper->_log( 'Extra Action :' . $action_type . ',Point:' . $point . ', Earn Trans id:' . $earn_trans_id );
-					$earn_trans_id = apply_filters( 'wlr_after_add_extra_earn_point_transaction', $earn_trans_id, $args );
+					$woocommerce_helper->_log( 'Extra Action :' . $action_type . ',Point:' . $point . ', Earn Trans id:' . $earn_trans_id );
+					$earn_trans_id = apply_filters( 'wlr_after_add_extra_earn_point_transaction', $earn_trans_id,
+						$args );
 					if ( $earn_trans_id == 0 ) {
 						$status = false;
 					}
@@ -629,22 +658,24 @@ class Base {
 						'required_points'     => (int) isset( $action_data['required_points'] ) && ! empty( $action_data['required_points'] ) ? $action_data['required_points'] : 0,
 						'discount_code'       => isset( $action_data['discount_code'] ) && ! empty( $action_data['discount_code'] ) ? $action_data['discount_code'] : null,
 					);
-					self::$woocommerce_helper->_log( 'Extra Action :' . $action_type . ',Point:' . $point . ', Log data:' . json_encode( $log_data ) );
+					$woocommerce_helper->_log( 'Extra Action :' . $action_type . ',Point:' . $point . ', Log data:' . json_encode( $log_data ) );
 					$this->add_note( $log_data );
 				}
 			} catch ( Exception $e ) {
-				self::$woocommerce_helper->_log( 'Extra Action :' . $action_type . ',Point:' . $point . ', Trans/Log Exception:' . $e->getMessage() );
+				$woocommerce_helper->_log( 'Extra Action :' . $action_type . ',Point:' . $point . ', Trans/Log Exception:' . $e->getMessage() );
 				$status = false;
 			}
 		} else {
-			self::$woocommerce_helper->_log( 'Extra Action :' . $action_type . ',Point:' . $point . ', User save failed' );
+			$woocommerce_helper->_log( 'Extra Action :' . $action_type . ',Point:' . $point . ', User save failed' );
 			$status = false;
 		}
-		self::$woocommerce_helper->_log( 'Extra Action :' . $action_type . ',Point:' . $point . ', Extra Action status:' . $status );
+		$woocommerce_helper->_log( 'Extra Action :' . $action_type . ',Point:' . $point . ', Extra Action status:' . $status );
 		if ( $status ) {
 			\WC_Emails::instance();
-			do_action( 'wlr_after_add_extra_earn_point', $action_data['user_email'], $point, $action_type, $action_data );
-			do_action( 'wlr_notify_after_add_extra_earn_point', $action_data['user_email'], $point, $action_type, $action_data );
+			do_action( 'wlr_after_add_extra_earn_point', $action_data['user_email'], $point, $action_type,
+				$action_data );
+			do_action( 'wlr_notify_after_add_extra_earn_point', $action_data['user_email'], $point, $action_type,
+				$action_data );
 		}
 
 		return $status;

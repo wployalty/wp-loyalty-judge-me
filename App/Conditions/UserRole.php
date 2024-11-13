@@ -6,11 +6,13 @@
  * */
 
 namespace Wljm\App\Conditions;
+
+use Wljm\App\Helpers\Woocommerce;
+
 defined( 'ABSPATH' ) or die();
 
 class UserRole extends Base {
 	function __construct() {
-		parent::__construct();
 		$this->name  = 'user_role';
 		$this->label = __( 'User role', 'wp-loyalty-judge-me' );
 		$this->group = __( 'Customer', 'wp-loyalty-judge-me' );
@@ -31,7 +33,8 @@ class UserRole extends Base {
 			$user = apply_filters( 'wlr_rule_user_role_on_condition_check', $user );
 		}
 		if ( ! empty( $user ) ) {
-			$current_user_role = self::$woocommerce_helper->getRole( $user );
+			$woocommerce_helper = Woocommerce::getInstance();
+			$current_user_role  = $woocommerce_helper->getRole( $user );
 
 			return $this->doCompareInListOperation( $options->operator, $current_user_role, $options->value );
 		}

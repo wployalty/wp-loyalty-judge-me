@@ -6,21 +6,17 @@
  * */
 
 namespace Wljm\App\Conditions;
+
 defined( 'ABSPATH' ) or die();
 
 use DateTime;
 use Exception;
 use stdClass;
-use Wljm\App\Helpers\Input;
 use Wljm\App\Helpers\Woocommerce;
-abstract class Base {
-	public static $woocommerce_helper, $filter;
-	public $name = null, $rule = null, $label = null, $group = null, $input, $extra_params = array( 'render_saved_condition' => false );
 
-	function __construct() {
-		self::$woocommerce_helper = ( ! empty( self::$woocommerce_helper ) ) ? self::$woocommerce_helper : new Woocommerce();
-		$this->input              = new Input();
-	}
+abstract class Base {
+	public static $filter;
+	public $name = null, $rule = null, $label = null, $group = null, $extra_params = array( 'render_saved_condition' => false );
 
 	abstract function check( $options, $data );
 
@@ -37,11 +33,12 @@ abstract class Base {
 	}
 
 	function isValidCalculateBased( $is_calculate_based = '' ) {
-		return is_string( $is_calculate_based ) && in_array( $is_calculate_based, apply_filters( 'wlr_allowed_calculate_based', array(
-				'cart',
-				'order',
-				'product'
-			) ) );
+		return is_string( $is_calculate_based ) && in_array( $is_calculate_based,
+				apply_filters( 'wlr_allowed_calculate_based', array(
+					'cart',
+					'order',
+					'product'
+				) ) );
 	}
 
 	function generateBase64Encode( $data ) {
@@ -218,10 +215,12 @@ abstract class Base {
 	}*/
 
 	function checkAdditionalRestriction( $item, $is_calculate_base ) {
-		$status = true;
+		$woocommerce_helper = Woocommerce::getInstance();
+		$status             = true;
 		if ( $is_calculate_base == 'cart' && is_array( $item ) && isset( $item['bundled_by'] ) && ! empty( $item['bundled_by'] ) ) {
 			$status = false;
-		} elseif ( $is_calculate_base == 'order' && is_object( $item ) && self::$woocommerce_helper->isMethodExists( $item, 'get_meta' ) ) {
+		} elseif ( $is_calculate_base == 'order' && is_object( $item ) && $woocommerce_helper->isMethodExists( $item,
+				'get_meta' ) ) {
 			$status = ! $item->get_meta( '_bundled_by' );
 		}
 
@@ -320,7 +319,8 @@ abstract class Base {
 			} elseif ( 'product_sku' === $type ) {
 				return $this->compareWithSku( $product, $values, $cart_item );
 			} elseif ( 'product_tags' === $type ) {
-				$product = self::$woocommerce_helper->getParentProduct( $product );
+				$woocommerce_helper = Woocommerce::getInstance();
+				$product            = $woocommerce_helper->getParentProduct( $product );
 
 				return $this->compareWithTags( $product, $values );
 			} elseif ( 'products' === $type ) {
@@ -334,9 +334,10 @@ abstract class Base {
 	}
 
 	function compareWithAttributes( $product, $operation_values, $cart_item ) {
-		$attrs    = self::$woocommerce_helper->getProductAttributes( $product );
-		$attr_ids = array();
-		if ( self::$woocommerce_helper->productTypeIs( $product, 'variation' ) ) {
+		$woocommerce_helper = Woocommerce::getInstance();
+		$attrs              = $woocommerce_helper->getProductAttributes( $product );
+		$attr_ids           = array();
+		if ( $woocommerce_helper->productTypeIs( $product, 'variation' ) ) {
 			if ( count( array_filter( $attrs ) ) < count( $attrs ) ) {
 				if ( isset( $cart_item['variation'] ) && ! empty( $cart_item['variation'] ) ) {
 					$attrs = array();
@@ -345,7 +346,7 @@ abstract class Base {
 					}
 				}
 			}
-			$product_variation = self::$woocommerce_helper->getProduct( self::$woocommerce_helper->getProductParentId( $product ) );
+			$product_variation = $woocommerce_helper->getProduct( $woocommerce_helper->getProductParentId( $product ) );
 			foreach ( $attrs as $taxonomy => $value ) {
 				if ( $value ) {
 					$taxonomy = apply_filters( 'wlr_rules_attribute_slug', urldecode( $taxonomy ), $taxonomy, $value );
@@ -354,28 +355,30 @@ abstract class Base {
 						$attr_ids = array_merge( $attr_ids, (array) ( $term_obj->term_id ) );
 					}
 				} else {
-					$attrs_variation = self::$woocommerce_helper->getProductAttributes( $product_variation );
+					$attrs_variation = $woocommerce_helper->getProductAttributes( $product_variation );
 					foreach ( $attrs_variation as $attr ) {
-						if ( $taxonomy == self::$woocommerce_helper->getAttributeName( $attr ) ) {
-							$attr_ids = array_merge( $attr_ids, self::$woocommerce_helper->getAttributeOption( $attr ) );
+						if ( $taxonomy == $woocommerce_helper->getAttributeName( $attr ) ) {
+							$attr_ids = array_merge( $attr_ids,
+								$woocommerce_helper->getAttributeOption( $attr ) );
 						}
 					}
 				}
-				$attr_ids = apply_filters( 'wlr_rules_get_attribute_id_from_taxonomy_name', $attr_ids, $taxonomy, $product, $cart_item, $operation_values );
+				$attr_ids = apply_filters( 'wlr_rules_get_attribute_id_from_taxonomy_name', $attr_ids, $taxonomy,
+					$product, $cart_item, $operation_values );
 			}
 			if ( ! empty( $product_variation ) ) {
-				$attributes_parent = self::$woocommerce_helper->getProductAttributes( $product_variation );
+				$attributes_parent = $woocommerce_helper->getProductAttributes( $product_variation );
 				foreach ( $attributes_parent as $attributes ) {
 					if ( ! empty( $attributes ) && is_object( $attributes ) ) {
-						$variation = self::$woocommerce_helper->getAttributeVariation( $attributes );
+						$variation = $woocommerce_helper->getAttributeVariation( $attributes );
 						if ( ! (int) $variation ) {
-							$options = self::$woocommerce_helper->getAttributeOption( $attributes );
+							$options = $woocommerce_helper->getAttributeOption( $attributes );
 							if ( ! empty( $options ) && is_array( $options ) ) {
 								$attr_ids = array_merge( $attr_ids, $options );
 							}
 						}
 					} else {
-						$options = self::$woocommerce_helper->getAttributeOption( $attributes );
+						$options = $woocommerce_helper->getAttributeOption( $attributes );
 						if ( ! empty( $options ) && is_array( $options ) ) {
 							$attr_ids = array_merge( $attr_ids, $options );
 						}
@@ -384,7 +387,7 @@ abstract class Base {
 			}
 		} else {
 			foreach ( $attrs as $attr ) {
-				$attr_ids = array_merge( $attr_ids, self::$woocommerce_helper->getAttributeOption( $attr ) );
+				$attr_ids = array_merge( $attr_ids, $woocommerce_helper->getAttributeOption( $attr ) );
 			}
 		}
 		$attr_ids = array_unique( $attr_ids );
@@ -393,14 +396,18 @@ abstract class Base {
 	}
 
 	function compareWithCategories( $product, $operation_values ) {
-		$categories = self::$woocommerce_helper->getProductCategories( $product );
+		$woocommerce_helper = Woocommerce::getInstance();
+		$categories         = $woocommerce_helper->getProductCategories( $product );
 
 		return count( array_intersect( $categories, $operation_values ) ) > 0;
 	}
 
 	function compareWithSku( $product, $operation_values, $cart_item, $sale_badge = false ) {
-		$product_sku = self::$woocommerce_helper->getProductSku( $product );
-		$product_sku = apply_filters( 'wlr_check_sku_filter', $product_sku, $product, $operation_values, $cart_item, $sale_badge );
+		$woocommerce_helper = Woocommerce::getInstance();
+		$product_sku        = $woocommerce_helper->getProductSku( $product );
+		$product_sku        = apply_filters( 'wlr_check_sku_filter', $product_sku, $product, $operation_values,
+			$cart_item,
+			$sale_badge );
 
 		return in_array( $product_sku, $operation_values );
 	}
@@ -409,14 +416,16 @@ abstract class Base {
 		if ( ! is_object( $product ) || ! is_array( $operation_values ) ) {
 			return false;
 		}
-		$tag_ids = self::$woocommerce_helper->getProductTags( $product );
+		$woocommerce_helper = Woocommerce::getInstance();
+		$tag_ids            = $woocommerce_helper->getProductTags( $product );
 		if ( count( array_intersect( $tag_ids, $operation_values ) ) > 0 ) {
 			return true;
 		}
-		if ( self::$woocommerce_helper->isMethodExists( $product, 'get_type' ) && $product->get_type() == 'variation' ) {
-			$parent_product = self::$woocommerce_helper->getParentProduct( $product );
+		if ( $woocommerce_helper->isMethodExists( $product,
+				'get_type' ) && $product->get_type() == 'variation' ) {
+			$parent_product = $woocommerce_helper->getParentProduct( $product );
 			if ( is_object( $parent_product ) ) {
-				$tag_ids = self::$woocommerce_helper->getProductTags( $parent_product );
+				$tag_ids = $woocommerce_helper->getProductTags( $parent_product );
 			}
 		}
 
@@ -429,7 +438,8 @@ abstract class Base {
 		}
 		$apply_discount_to_child = apply_filters( 'wlr_apply_condition_to_child', false, $products );
 		if ( $apply_discount_to_child ) {
-			$product_variations = self::$woocommerce_helper->getVariantsOfProducts( $products );
+			$woocommerce_helper = Woocommerce::getInstance();
+			$product_variations = $woocommerce_helper->getVariantsOfProducts( $products );
 			if ( ! empty( $product_variations ) && is_array( $product_variations ) ) {
 				$products = $this->combineProductArrays( $products, $product_variations );
 			}
@@ -458,11 +468,13 @@ abstract class Base {
 	}*/
 
 	function compareWithProducts( $product, $operation_values ) {
-		$product_id = self::$woocommerce_helper->getProductId( $product );
+		$woocommerce_helper = Woocommerce::getInstance();
+		$product_id         = $woocommerce_helper->getProductId( $product );
 		if ( in_array( $product_id, $operation_values ) ) {
 			return true;
 		}
-		if ( self::$woocommerce_helper->isMethodExists( $product, 'get_variation_prices' ) && apply_filters( 'wlr_apply_condition_to_variants', true ) ) {
+		if ( $woocommerce_helper->isMethodExists( $product,
+				'get_variation_prices' ) && apply_filters( 'wlr_apply_condition_to_variants', true ) ) {
 			$variations = $product->get_variation_prices();
 			if ( is_array( $variations ) && isset( $variations['price'] ) && is_array( $variations['price'] ) ) {
 				foreach ( $operation_values as $key ) {

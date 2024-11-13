@@ -6,11 +6,13 @@
  * */
 
 namespace Wljm\App\Conditions;
+
+use Wljm\App\Helpers\Woocommerce;
+
 defined( 'ABSPATH' ) or die();
 
 class CartSubTotal extends Base {
 	function __construct() {
-		parent::__construct();
 		$this->name  = 'cart_subtotal';
 		$this->label = __( 'Subtotal', 'wp-loyalty-judge-me' );
 		$this->group = __( 'Cart', 'wp-loyalty-judge-me' );
@@ -30,11 +32,12 @@ class CartSubTotal extends Base {
 		if ( ! $this->isValidCalculateBased( $is_calculate_base ) ) {
 			return false;
 		}
-		$subtotal = 0;
+		$subtotal           = 0;
+		$woocommerce_helper = Woocommerce::getInstance();
 		if ( $is_calculate_base === 'cart' && isset( $data[ $is_calculate_base ] ) && ! empty( $data[ $is_calculate_base ] ) ) {
-			$subtotal = self::$woocommerce_helper->getCartSubtotal( $data[ $is_calculate_base ] );
+			$subtotal = $woocommerce_helper->getCartSubtotal( $data[ $is_calculate_base ] );
 		} elseif ( $is_calculate_base === 'order' && isset( $data[ $is_calculate_base ] ) && ! empty( $data[ $is_calculate_base ] ) ) {
-			$subtotal = self::$woocommerce_helper->getOrderSubtotal( $data[ $is_calculate_base ] );
+			$subtotal = $woocommerce_helper->getOrderSubtotal( $data[ $is_calculate_base ] );
 		} elseif ( $is_calculate_base === 'product' ) {
 			return true;
 		}

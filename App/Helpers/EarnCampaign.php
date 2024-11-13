@@ -6,7 +6,8 @@
  * */
 
 namespace Wljm\App\Helpers;
-defined('ABSPATH') or die();
+
+defined( 'ABSPATH' ) or die();
 
 use stdClass;
 use Wljm\App\Models\Rewards;
@@ -16,6 +17,7 @@ class EarnCampaign extends Base {
 	public static $instance = null;
 	public static $single_campaign = array();
 	public $earn_campaign, $available_conditions = array();
+
 	public static function getInstance( array $config = array() ) {
 		if ( ! self::$instance ) {
 			self::$instance = new self( $config );
@@ -25,9 +27,13 @@ class EarnCampaign extends Base {
 	}
 
 	function addEarnCampaignPoint(
-		$action_type, $point, $campaign_id, $action_data
+		$action_type,
+		$point,
+		$campaign_id,
+		$action_data
 	) {
-		self::$woocommerce_helper->_log( 'Reached EarnCampaign::addEarnCampaignPoint' );
+		$woocommerce_helper = Woocommerce::getInstance();
+		$woocommerce_helper->_log( 'Reached EarnCampaign::addEarnCampaignPoint' );
 		if ( ! is_array( $action_data ) || $point <= 0
 		     || empty( $action_data['user_email'] )
 		     || empty( $action_type )
@@ -35,9 +41,9 @@ class EarnCampaign extends Base {
 		) {
 			return false;
 		}
-		self::$woocommerce_helper->_log( 'Action :' . $action_type
-		                                 . ',Campaign id:' . $campaign_id
-		                                 . ', Point :' . $point );
+		$woocommerce_helper->_log( 'Action :' . $action_type
+		                           . ',Campaign id:' . $campaign_id
+		                           . ', Point :' . $point );
 		$point      = apply_filters( 'wlr_before_add_earn_point', $point,
 			$action_type, $action_data );
 		$point      = apply_filters( 'wlr_notify_before_add_earn_point', $point,
@@ -76,7 +82,7 @@ class EarnCampaign extends Base {
 		       && ! empty( $action_data['order_id'] )
 		       && isset( $action_data['order'] )
 		       && ! empty( $action_data['order'] ) )
-		     && self::$woocommerce_helper->isMethodExists( $action_data['order'],
+		     && $woocommerce_helper->isMethodExists( $action_data['order'],
 				'get_meta' )
 		) {
 			$user_dob = $action_data['order']->get_meta( 'wlr_dob' );
@@ -99,12 +105,12 @@ class EarnCampaign extends Base {
 					$this->getAchievementName( $action_data['action_sub_type'] ) ),
 			'created_at'  => strtotime( date( "Y-m-d H:i:s" ) )
 		);
-		self::$woocommerce_helper->_log( 'Action :' . $action_type
-		                                 . ',Campaign id:' . $campaign_id
-		                                 . ', Ledger data:'
-		                                 . json_encode( $ledger_data )
-		                                 . ',User data:'
-		                                 . json_encode( $_data ) );
+		$woocommerce_helper->_log( 'Action :' . $action_type
+		                           . ',Campaign id:' . $campaign_id
+		                           . ', Ledger data:'
+		                           . json_encode( $ledger_data )
+		                           . ',User data:'
+		                           . json_encode( $_data ) );
 
 		if ( ! self::$user_model->insertOrUpdate( $_data, $id ) ) {
 			return false;
@@ -112,7 +118,7 @@ class EarnCampaign extends Base {
 		$this->updatePointLedger( $ledger_data );
 
 		if ( $action_type == 'referral' ) {
-			self::$woocommerce_helper->set_referral_code( '' );
+			$woocommerce_helper->set_referral_code( '' );
 		}
 		$args = array(
 			'user_email'       => $action_data['user_email'],
@@ -171,17 +177,17 @@ class EarnCampaign extends Base {
 				$args['order_total']    = $action_data['order']->get_total();
 			}
 		}
-		self::$woocommerce_helper->_log( 'Action :' . $action_type
-		                                 . ',Campaign id:' . $campaign_id
-		                                 . ', Earn Trans Data:'
-		                                 . json_encode( $args ) );
+		$woocommerce_helper->_log( 'Action :' . $action_type
+		                           . ',Campaign id:' . $campaign_id
+		                           . ', Earn Trans Data:'
+		                           . json_encode( $args ) );
 		try {
 			$earn_trans_id
 				= self::$earn_campaign_transaction_model->insertRow( $args );
-			self::$woocommerce_helper->_log( 'Action :' . $action_type
-			                                 . ',Campaign id:' . $campaign_id
-			                                 . ', Earn Trans id:'
-			                                 . $earn_trans_id );
+			$woocommerce_helper->_log( 'Action :' . $action_type
+			                           . ',Campaign id:' . $campaign_id
+			                           . ', Earn Trans id:'
+			                           . $earn_trans_id );
 			$earn_trans_id
 				= apply_filters( 'wlr_after_add_earn_point_transaction',
 				$earn_trans_id, $args );
@@ -200,7 +206,7 @@ class EarnCampaign extends Base {
 			     && $args['order_id'] > 0
 			) {
 				$order_obj
-					= self::$woocommerce_helper->getOrder( $args['order_id'] );
+					= $woocommerce_helper->getOrder( $args['order_id'] );
 				if ( ! empty( $order_obj ) ) {
 					$order_note = $customer_note . '('
 					              . $action_data['user_email'] . ')';
@@ -231,23 +237,23 @@ class EarnCampaign extends Base {
 				                         && ! empty( $action_data['referral_type'] )
 					? $action_data['referral_type'] : '',
 			);
-			self::$woocommerce_helper->_log( 'Action :' . $action_type
-			                                 . ',Campaign id:' . $campaign_id
-			                                 . ', Log data:'
-			                                 . json_encode( $log_data ) );
+			$woocommerce_helper->_log( 'Action :' . $action_type
+			                           . ',Campaign id:' . $campaign_id
+			                           . ', Log data:'
+			                           . json_encode( $log_data ) );
 			$log_data = apply_filters( 'wlr_before_earn_point_log_data', $log_data, $action_type, $action_data );
 			$this->add_note( $log_data );
 		} catch ( \Exception $e ) {
-			self::$woocommerce_helper->_log( 'Action :' . $action_type
-			                                 . ',Campaign id:' . $campaign_id
-			                                 . ', Earn Trans/ Log Exception:'
-			                                 . $e->getMessage() );
+			$woocommerce_helper->_log( 'Action :' . $action_type
+			                           . ',Campaign id:' . $campaign_id
+			                           . ', Earn Trans/ Log Exception:'
+			                           . $e->getMessage() );
 
 			return false;
 		}
-		self::$woocommerce_helper->_log( 'Action :' . $action_type
-		                                 . ',Campaign id:' . $campaign_id
-		                                 . ', Point earning status: yes' );
+		$woocommerce_helper->_log( 'Action :' . $action_type
+		                           . ',Campaign id:' . $campaign_id
+		                           . ', Point earning status: yes' );
 		\WC_Emails::instance();
 		$action_data['campaign_id'] = $campaign_id;
 		do_action( 'wlr_after_add_earn_point', $action_data['user_email'],
@@ -294,11 +300,16 @@ class EarnCampaign extends Base {
 
 		return $this;
 	}
+
 	function addEarnCampaignReward(
-		$action_type, $reward, $campaign_id, $action_data,
+		$action_type,
+		$reward,
+		$campaign_id,
+		$action_data,
 		$force_generate_coupon = false
 	) {
-		self::$woocommerce_helper->_log( 'Reached EarnCampaign::addEarnCampaignReward' );
+		$woocommerce_helper = Woocommerce::getInstance();
+		$woocommerce_helper->_log( 'Reached EarnCampaign::addEarnCampaignReward' );
 		if ( ! is_array( $action_data ) || ! isset( $reward->id )
 		     || $reward->id <= 0
 		     || empty( $action_data['user_email'] )
@@ -307,9 +318,9 @@ class EarnCampaign extends Base {
 		) {
 			return false;
 		}
-		self::$woocommerce_helper->_log( 'Action :' . $action_type
-		                                 . ',Campaign id:' . $campaign_id
-		                                 . ', Reward id :' . $reward->id );
+		$woocommerce_helper->_log( 'Action :' . $action_type
+		                           . ',Campaign id:' . $campaign_id
+		                           . ', Reward id :' . $reward->id );
 		$reward   = apply_filters( 'wlr_before_add_earn_reward', $reward,
 			$action_type, $action_data );
 		$reward   = apply_filters( 'wlr_notify_before_add_earn_reward', $reward,
@@ -321,7 +332,7 @@ class EarnCampaign extends Base {
 		       && ! empty( $action_data['order_id'] )
 		       && isset( $action_data['order'] )
 		       && ! empty( $action_data['order'] ) )
-		     && self::$woocommerce_helper->isMethodExists( $action_data['order'],
+		     && $woocommerce_helper->isMethodExists( $action_data['order'],
 				'get_meta' )
 		) {
 			$user_dob = $action_data['order']->get_meta( 'wlr_dob' );
@@ -340,23 +351,23 @@ class EarnCampaign extends Base {
 				'birthday_date'     => $user_dob,
 				'created_date'      => strtotime( date( "Y-m-d H:i:s" ) ),
 			);
-			self::$woocommerce_helper->_log( 'Action :' . $action_type
-			                                 . ',Campaign id:' . $campaign_id
-			                                 . ',Reward id :' . $reward->id
-			                                 . ', User data:'
-			                                 . json_encode( $_data ) );
+			$woocommerce_helper->_log( 'Action :' . $action_type
+			                           . ',Campaign id:' . $campaign_id
+			                           . ',Reward id :' . $reward->id
+			                           . ', User data:'
+			                           . json_encode( $_data ) );
 			$status = (bool) self::$user_model->insertOrUpdate( $_data );
-			self::$woocommerce_helper->_log( 'Action :' . $action_type
-			                                 . ',Campaign id:' . $campaign_id
-			                                 . ',Reward id :' . $reward->id
-			                                 . ', User insert status:'
-			                                 . $status );
+			$woocommerce_helper->_log( 'Action :' . $action_type
+			                           . ',Campaign id:' . $campaign_id
+			                           . ',Reward id :' . $reward->id
+			                           . ', User insert status:'
+			                           . $status );
 		} elseif ( is_object( $user ) && isset( $user->id ) && $user->id > 0
 		           && ( isset( $action_data['order_id'] )
 		                && ! empty( $action_data['order_id'] )
 		                && isset( $action_data['order'] )
 		                && ! empty( $action_data['order'] ) )
-		           && self::$woocommerce_helper->isMethodExists( $action_data['order'],
+		           && $woocommerce_helper->isMethodExists( $action_data['order'],
 				'get_meta' )
 		) {
 			$user_dob = $action_data['order']->get_meta( 'wlr_dob' );
@@ -371,7 +382,7 @@ class EarnCampaign extends Base {
 		}
 
 		if ( $action_type == 'referral' ) {
-			self::$woocommerce_helper->set_referral_code( '' );
+			$woocommerce_helper->set_referral_code( '' );
 		}
 		$args = array(
 			'user_email'       => $action_data['user_email'],
@@ -432,28 +443,28 @@ class EarnCampaign extends Base {
 			$admin_user            = wp_get_current_user();
 			$args['admin_user_id'] = $admin_user->ID;
 		}
-		self::$woocommerce_helper->_log( 'Action :' . $action_type
-		                                 . ',Campaign id:' . $campaign_id
-		                                 . ',Reward id :' . $reward->id
-		                                 . ', Earn trans data:'
-		                                 . json_encode( $args ) );
+		$woocommerce_helper->_log( 'Action :' . $action_type
+		                           . ',Campaign id:' . $campaign_id
+		                           . ',Reward id :' . $reward->id
+		                           . ', Earn trans data:'
+		                           . json_encode( $args ) );
 		try {
 			$earn_trans_id
 				= self::$earn_campaign_transaction_model->insertRow( $args );
-			self::$woocommerce_helper->_log( 'Action :' . $action_type
-			                                 . ',Campaign id:' . $campaign_id
-			                                 . ',Reward id :' . $reward->id
-			                                 . ', Earn trans id:'
-			                                 . $earn_trans_id );
+			$woocommerce_helper->_log( 'Action :' . $action_type
+			                           . ',Campaign id:' . $campaign_id
+			                           . ',Reward id :' . $reward->id
+			                           . ', Earn trans id:'
+			                           . $earn_trans_id );
 			if ( $earn_trans_id == 0 ) {
 				$status = false;
 			}
 		} catch ( \Exception $e ) {
-			self::$woocommerce_helper->_log( 'Action :' . $action_type
-			                                 . ',Campaign id:' . $campaign_id
-			                                 . ',Reward id :' . $reward->id
-			                                 . ', Earn trans exception:'
-			                                 . $e->getMessage() );
+			$woocommerce_helper->_log( 'Action :' . $action_type
+			                           . ',Campaign id:' . $campaign_id
+			                           . ',Reward id :' . $reward->id
+			                           . ', Earn trans exception:'
+			                           . $e->getMessage() );
 			$status = false;
 		}
 		if ( ! $status ) {
@@ -490,20 +501,20 @@ class EarnCampaign extends Base {
 			'created_at'             => strtotime( date( "Y-m-d H:i:s" ) ),
 			'modified_at'            => 0
 		);
-		self::$woocommerce_helper->_log( 'Action :' . $action_type
-		                                 . ',Campaign id:' . $campaign_id
-		                                 . ',Reward id :' . $reward->id
-		                                 . ', User reward data:'
-		                                 . json_encode( $user_reward_data ) );
+		$woocommerce_helper->_log( 'Action :' . $action_type
+		                           . ',Campaign id:' . $campaign_id
+		                           . ',Reward id :' . $reward->id
+		                           . ', User reward data:'
+		                           . json_encode( $user_reward_data ) );
 		$user_reward_model = new UserRewards();
 		try {
 			$user_reward_status
 				= $user_reward_model->insertRow( $user_reward_data );
-			self::$woocommerce_helper->_log( 'Action :' . $action_type
-			                                 . ',Campaign id:' . $campaign_id
-			                                 . ',Reward id :' . $reward->id
-			                                 . ', User reward status:'
-			                                 . $user_reward_status );
+			$woocommerce_helper->_log( 'Action :' . $action_type
+			                           . ',Campaign id:' . $campaign_id
+			                           . ',Reward id :' . $reward->id
+			                           . ', User reward status:'
+			                           . $user_reward_status );
 			if ( $user_reward_status <= 0 ) {
 				return false;
 			}
@@ -522,7 +533,7 @@ class EarnCampaign extends Base {
 			     && $args['order_id'] > 0
 			) {
 				$order_obj
-					        = self::$woocommerce_helper->getOrder( $args['order_id'] );
+					        = $woocommerce_helper->getOrder( $args['order_id'] );
 				$order_note = $customer_note . '(' . $action_data['user_email']
 				              . ')';
 				if ( ! empty( $order_obj ) ) {
@@ -554,14 +565,15 @@ class EarnCampaign extends Base {
 				                         && ! empty( $action_data['referral_type'] )
 					? $action_data['referral_type'] : '',
 			);
-			self::$woocommerce_helper->_log( 'Action :' . $action_type
-			                                 . ',Campaign id:' . $campaign_id
-			                                 . ',Reward id :' . $reward->id
-			                                 . ', Log data:'
-			                                 . json_encode( $log_data ) );
-			$log_data = apply_filters( 'wlr_before_earn_reward_log_data', $log_data, $action_type, $action_data, $reward );
+			$woocommerce_helper->_log( 'Action :' . $action_type
+			                           . ',Campaign id:' . $campaign_id
+			                           . ',Reward id :' . $reward->id
+			                           . ', Log data:'
+			                           . json_encode( $log_data ) );
+			$log_data = apply_filters( 'wlr_before_earn_reward_log_data', $log_data, $action_type, $action_data,
+				$reward );
 			$this->add_note( $log_data );
-			$options                    = self::$woocommerce_helper->getOptions( 'wlr_settings' );
+			$options                    = $woocommerce_helper->getOptions( 'wlr_settings' );
 			$allow_auto_generate_coupon = $force_generate_coupon
 			                              || ( ! ( is_array( $options )
 			                                       && isset( $options['allow_auto_generate_coupon'] )
@@ -615,14 +627,14 @@ class EarnCampaign extends Base {
 									           . $expire_email_period ) ) );
 							}
 						}
-						self::$woocommerce_helper->_log( 'Action :'
-						                                 . $action_type
-						                                 . ',Campaign id:'
-						                                 . $campaign_id
-						                                 . ',Reward id :'
-						                                 . $reward->id
-						                                 . ', auto generate Update data:'
-						                                 . json_encode( $update_data ) );
+						$woocommerce_helper->_log( 'Action :'
+						                           . $action_type
+						                           . ',Campaign id:'
+						                           . $campaign_id
+						                           . ',Reward id :'
+						                           . $reward->id
+						                           . ', auto generate Update data:'
+						                           . json_encode( $update_data ) );
 						$update_where = array( 'id' => $user_reward_table->id );
 						$user_reward_model->updateRow( $update_data,
 							$update_where );
@@ -632,18 +644,18 @@ class EarnCampaign extends Base {
 				}
 			}
 		} catch ( \Exception $e ) {
-			self::$woocommerce_helper->_log( 'Action :' . $action_type
-			                                 . ',Campaign id:' . $campaign_id
-			                                 . ',Reward id :' . $reward->id
-			                                 . ', User reward exception:'
-			                                 . $e->getMessage() );
+			$woocommerce_helper->_log( 'Action :' . $action_type
+			                           . ',Campaign id:' . $campaign_id
+			                           . ',Reward id :' . $reward->id
+			                           . ', User reward exception:'
+			                           . $e->getMessage() );
 			$status = false;
 		}
-		self::$woocommerce_helper->_log( 'Action :' . $action_type
-		                                 . ',Campaign id:' . $campaign_id
-		                                 . ',Reward id :' . $reward->id
-		                                 . ', Reward earning status:'
-		                                 . $status );
+		$woocommerce_helper->_log( 'Action :' . $action_type
+		                           . ',Campaign id:' . $campaign_id
+		                           . ',Reward id :' . $reward->id
+		                           . ', Reward earning status:'
+		                           . $status );
 		if ( $status ) {
 			\WC_Emails::instance();
 			$action_data['campaign_id'] = $campaign_id;
@@ -660,8 +672,8 @@ class EarnCampaign extends Base {
 	/**
 	 * Check free product out of stock status.
 	 *
-	 * @param boolean $status Instant coupon apply.
-	 * @param object $reward Reward data.
+	 * @param   boolean  $status  Instant coupon apply.
+	 * @param   object   $reward  Reward data.
 	 *
 	 * @return bool
 	 */
@@ -676,8 +688,9 @@ class EarnCampaign extends Base {
 		) {
 			return $status;
 		}
+		$woocommerce_helper = Woocommerce::getInstance();
 		$free_products
-			= self::$woocommerce_helper->isJson( $reward_data->free_product ) ?
+		                    = $woocommerce_helper->isJson( $reward_data->free_product ) ?
 			json_decode( $reward_data->free_product, true ) : [];
 		if ( empty( $free_products ) ) {
 			return $status;
@@ -693,7 +706,10 @@ class EarnCampaign extends Base {
 	}
 
 	protected function processCampaignAction(
-		$action_type, $type, $campaign, $data
+		$action_type,
+		$type,
+		$campaign,
+		$data
 	) {
 		if ( empty( $type ) ) {
 			return null;
@@ -995,6 +1011,7 @@ class EarnCampaign extends Base {
 
 		return $rewards;
 	}
+
 	function processCampaignRewards( $data ) {
 		$rewards = array();
 		if ( isset( $data['action_type'] )

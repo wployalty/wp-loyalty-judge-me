@@ -6,10 +6,12 @@
  * */
 
 namespace Wljm\App\Premium\Helpers;
+
 defined( 'ABSPATH' ) or die();
 
 use Wljm\App\Helpers\Base;
 use Wljm\App\Helpers\Woocommerce;
+
 class TwitterShare extends Base {
 	public static $instance = null;
 
@@ -35,11 +37,12 @@ class TwitterShare extends Base {
 		if ( ! empty( $available_rewards ) ) {
 			$reward_count = count( explode( ',', $available_rewards ) );
 		}
-		$display_message = '';
+		$display_message    = '';
+		$woocommerce_helper = Woocommerce::getInstance();
 		if ( ( $point > 0 || ! empty( $available_rewards ) ) && ! empty( $message ) ) {
 			$point           = $this->roundPoints( $point );
 			$short_code_list = array(
-				'{wlr_points}'       => $point > 0 ? self::$woocommerce_helper->numberFormatI18n( $point ) : '',
+				'{wlr_points}'       => $point > 0 ? $woocommerce_helper->numberFormatI18n( $point ) : '',
 				'{wlr_points_label}' => $this->getPointLabel( $point ),
 				'{wlr_rewards}'      => $available_rewards,
 				'{wlr_reward_label}' => $this->getRewardLabel( $reward_count ),

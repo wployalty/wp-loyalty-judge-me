@@ -6,11 +6,13 @@
  * */
 
 namespace Wljm\App\Conditions;
+
+use Wljm\App\Helpers\Woocommerce;
+
 defined( 'ABSPATH' ) or die();
 
 class CartLineItemsCount extends Base {
 	public function __construct() {
-		parent::__construct();
 		$this->name  = 'cart_line_items_count';
 		$this->label = __( 'Line Item Count', 'wp-loyalty-judge-me' );
 		$this->group = __( 'Cart', 'wp-loyalty-judge-me' );
@@ -30,10 +32,11 @@ class CartLineItemsCount extends Base {
 		if ( ! $this->isValidCalculateBased( $is_calculate_base ) ) {
 			return false;
 		}
-		$item_count = 0;
-		$logger     = wc_get_logger();
+		$item_count         = 0;
+		$logger             = wc_get_logger();
+		$woocommerce_helper = Woocommerce::getInstance();
 		if ( $is_calculate_base === 'cart' && isset( $data[ $is_calculate_base ] ) && ! empty( $data[ $is_calculate_base ] ) && isset( $options->sub_condition_type ) ) {
-			$cart_items = self::$woocommerce_helper->getCartItems( $data[ $is_calculate_base ] );
+			$cart_items = $woocommerce_helper->getCartItems( $data[ $is_calculate_base ] );
 			$cart_items = apply_filters( 'wlr_before_cart_line_item_condition', $cart_items, $options, $data );
 			switch ( $options->sub_condition_type ) {
 				case "all_item_count":
@@ -58,7 +61,7 @@ class CartLineItemsCount extends Base {
 					break;
 			}
 		} elseif ( $is_calculate_base === 'order' && isset( $data[ $is_calculate_base ] ) && ! empty( $data[ $is_calculate_base ] ) && isset( $options->sub_condition_type ) ) {
-			$order_items = self::$woocommerce_helper->getOrderItems( $data[ $is_calculate_base ] );
+			$order_items = $woocommerce_helper->getOrderItems( $data[ $is_calculate_base ] );
 			$order_items = apply_filters( 'wlr_before_order_line_item_condition', $order_items, $options, $data );
 			switch ( $options->sub_condition_type ) {
 				case "all_item_count":
@@ -74,7 +77,7 @@ class CartLineItemsCount extends Base {
 					}*/
 					break;
 				case 'each_item_qty':
-					$order_items = self::$woocommerce_helper->getOrderItems( $data[ $is_calculate_base ] );
+					$order_items = $woocommerce_helper->getOrderItems( $data[ $is_calculate_base ] );
 					$logger->add( 'WPLoyalty', 'Common QTY:' . $value );
 					foreach ( $order_items as $order_item ) {
 						$order_item_qty = $order_item->get_quantity();

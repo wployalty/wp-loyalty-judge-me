@@ -6,6 +6,7 @@
  * */
 
 namespace Wljm\App\Helpers;
+
 defined( 'ABSPATH' ) or die();
 
 class PointForPurchase extends Order {
@@ -22,6 +23,7 @@ class PointForPurchase extends Order {
 
 		return self::$instance;
 	}
+
 	function processMessage( $point_rule, $earning ) {
 		$messages             = array(
 			'single'   => '',
@@ -54,8 +56,10 @@ class PointForPurchase extends Order {
 		if ( ! empty( $msg_border_color ) ) {
 			$msg_style .= 'border:1px solid;border-color:' . $msg_border_color . ';';
 		}
-		$single_product_message   = isset( $point_rule->single_product_message ) && ! empty( $point_rule->single_product_message ) ? __( $point_rule->single_product_message, 'wp-loyalty-judge-me' ) : '';
-		$variable_product_message = isset( $point_rule->variable_product_message ) && ! empty( $point_rule->variable_product_message ) ? __( $point_rule->variable_product_message, 'wp-loyalty-judge-me' ) : '';
+		$single_product_message   = isset( $point_rule->single_product_message ) && ! empty( $point_rule->single_product_message ) ? __( $point_rule->single_product_message,
+			'wp-loyalty-judge-me' ) : '';
+		$variable_product_message = isset( $point_rule->variable_product_message ) && ! empty( $point_rule->variable_product_message ) ? __( $point_rule->variable_product_message,
+			'wp-loyalty-judge-me' ) : '';
 		if ( ( in_array( $display_page, array(
 					'all',
 					'single'
@@ -81,9 +85,10 @@ class PointForPurchase extends Order {
 		if ( ! empty( $available_rewards ) ) {
 			$reward_count = count( explode( ',', $available_rewards ) );
 		}
-		$short_code_list = apply_filters( 'wlr_point_for_purchase_message_shortcodes', array(
-			'{wlr_points}'         => $point > 0 ? self::$woocommerce_helper->numberFormatI18n( $point ) : '',
-			'{wlr_product_points}' => $point > 0 ? self::$woocommerce_helper->numberFormatI18n( $point ) : '',
+		$woocommerce_helper = Woocommerce::getInstance();
+		$short_code_list    = apply_filters( 'wlr_point_for_purchase_message_shortcodes', array(
+			'{wlr_points}'         => $point > 0 ? $woocommerce_helper->numberFormatI18n( $point ) : '',
+			'{wlr_product_points}' => $point > 0 ? $woocommerce_helper->numberFormatI18n( $point ) : '',
 			'{wlr_points_label}'   => $this->getPointLabel( $point ),
 			'{wlr_reward_label}'   => $this->getRewardLabel( $reward_count ),
 			'{wlr_rewards}'        => $available_rewards,

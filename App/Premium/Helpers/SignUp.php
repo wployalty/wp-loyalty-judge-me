@@ -6,6 +6,7 @@
  * */
 
 namespace Wljm\App\Premium\Helpers;
+
 defined( 'ABSPATH' ) or die();
 
 use Wljm\App\Helpers\Base;
@@ -26,7 +27,8 @@ class SignUp extends Base {
 		if ( $point <= 0 && empty( $rewards ) ) {
 			return $message;
 		}
-		$signup_message = isset( $point_rule->signup_message ) && ! empty( $point_rule->signup_message ) ? __( $point_rule->signup_message, 'wp-loyalty-judge-me' ) : '';
+		$signup_message = isset( $point_rule->signup_message ) && ! empty( $point_rule->signup_message ) ? __( $point_rule->signup_message,
+			'wp-loyalty-judge-me' ) : '';
 		if ( ! empty( $signup_message ) ) {
 			$message = '<span class="wlr-signup-message">' . Woocommerce::getCleanHtml( $signup_message ) . '</span>';
 		}
@@ -41,11 +43,12 @@ class SignUp extends Base {
 		if ( ! empty( $available_rewards ) ) {
 			$reward_count = count( explode( ',', $available_rewards ) );
 		}
-		$display_message = '';
+		$display_message    = '';
+		$woocommerce_helper = Woocommerce::getInstance();
 		if ( ( $point > 0 || ! empty( $available_rewards ) ) && ! empty( $message ) ) {
 			$point           = $this->roundPoints( $point );
 			$short_code_list = array(
-				'{wlr_points}'       => $point > 0 ? self::$woocommerce_helper->numberFormatI18n( $point ) : '',
+				'{wlr_points}'       => $point > 0 ? $woocommerce_helper->numberFormatI18n( $point ) : '',
 				'{wlr_points_label}' => $this->getPointLabel( $point ),
 				'{wlr_reward_label}' => $this->getRewardLabel( $reward_count ),
 				'{wlr_rewards}'      => $available_rewards

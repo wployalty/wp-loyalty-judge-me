@@ -1,11 +1,13 @@
 <?php
 
 namespace Wljm\App\Premium\Helpers;
-defined('ABSPATH') or die();
+
+defined( 'ABSPATH' ) or die();
 
 use Wljm\App\Helpers\Base;
 use Wljm\App\Helpers\EarnCampaign;
 use Wljm\App\Helpers\Woocommerce;
+
 class ProductReview extends Base {
 	public static $instance = null;
 
@@ -27,11 +29,13 @@ class ProductReview extends Base {
 			$variant_reward = $this->getTotalEarning( $action_type, array(), $action_data );
 			foreach ( $variant_reward as $campaign_id => $v_reward ) {
 				if ( isset( $v_reward['point'] ) && ! empty( $v_reward['point'] ) && $v_reward['point'] > 0 ) {
-					$status = $earn_campaign->addEarnCampaignPoint( $action_type, $v_reward['point'], $campaign_id, $action_data );
+					$status = $earn_campaign->addEarnCampaignPoint( $action_type, $v_reward['point'], $campaign_id,
+						$action_data );
 				}
 				if ( isset( $v_reward['rewards'] ) && $v_reward['rewards'] ) {
 					foreach ( $v_reward['rewards'] as $single_reward ) {
-						$status = $earn_campaign->addEarnCampaignReward( $action_type, $single_reward, $campaign_id, $action_data );
+						$status = $earn_campaign->addEarnCampaignReward( $action_type, $single_reward, $campaign_id,
+							$action_data );
 					}
 				}
 			}
@@ -54,16 +58,18 @@ class ProductReview extends Base {
 		if ( ! empty( $available_rewards ) ) {
 			$reward_count = count( explode( ',', $available_rewards ) );
 		}
-		$display_message = '';
+		$display_message    = '';
+		$woocommerce_helper = Woocommerce::getInstance();
 		if ( ( $point > 0 || ! empty( $available_rewards ) ) ) {
 			$message        = '';
-			$review_message = isset( $point_rule->review_message ) && ! empty( $point_rule->review_message ) ? __( $point_rule->review_message, 'wp-loyalty-judge-me' ) : '';
+			$review_message = isset( $point_rule->review_message ) && ! empty( $point_rule->review_message ) ? __( $point_rule->review_message,
+				'wp-loyalty-judge-me' ) : '';
 			if ( ! empty( $review_message ) ) {
 				$message = '<span class="wlr-product-review-message">' . Woocommerce::getCleanHtml( $review_message ) . '</span>';
 			}
 			$point           = $this->roundPoints( $point );
 			$short_code_list = array(
-				'{wlr_points}'       => $point > 0 ? self::$woocommerce_helper->numberFormatI18n( $point ) : '',
+				'{wlr_points}'       => $point > 0 ? $woocommerce_helper->numberFormatI18n( $point ) : '',
 				'{wlr_points_label}' => $this->getPointLabel( $point ),
 				'{wlr_reward_label}' => $this->getRewardLabel( $reward_count ),
 				'{wlr_rewards}'      => $available_rewards

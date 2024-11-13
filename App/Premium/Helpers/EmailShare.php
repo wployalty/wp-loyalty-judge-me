@@ -6,10 +6,12 @@
  * */
 
 namespace Wljm\App\Premium\Helpers;
+
 defined( 'ABSPATH' ) or die();
 
 use Wljm\App\Helpers\Base;
 use Wljm\App\Helpers\Woocommerce;
+
 class EmailShare extends Base {
 	public static $instance = null;
 
@@ -41,11 +43,12 @@ class EmailShare extends Base {
 		if ( ! empty( $available_rewards ) ) {
 			$reward_count = count( explode( ',', $available_rewards ) );
 		}
-		$display_message = array();
+		$display_message    = array();
+		$woocommerce_helper = Woocommerce::getInstance();
 		if ( $point > 0 || ! empty( $available_rewards ) ) {
 			$point           = $this->roundPoints( $point );
 			$short_code_list = array(
-				'{wlr_points}'       => $point > 0 ? self::$woocommerce_helper->numberFormatI18n( $point ) : '',
+				'{wlr_points}'       => $point > 0 ? $woocommerce_helper->numberFormatI18n( $point ) : '',
 				'{wlr_points_label}' => $this->getPointLabel( $point ),
 				'{wlr_reward_label}' => $this->getRewardLabel( $reward_count ),
 				'{wlr_rewards}'      => $available_rewards,
