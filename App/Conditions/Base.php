@@ -16,7 +16,7 @@ use Wljm\App\Helpers\Woocommerce;
 
 abstract class Base {
 	public static $filter;
-	public $name = null, $rule = null, $label = null, $group = null, $extra_params = array( 'render_saved_condition' => false );
+	public $name = null, $rule = null, $label = null, $group = null, $extra_params = [ 'render_saved_condition' => false ];
 
 	abstract function check( $options, $data );
 
@@ -28,17 +28,17 @@ abstract class Base {
 		return $this->name;
 	}
 
-	function getCalculateBased( $data = array() ) {
+	function getCalculateBased( $data = [] ) {
 		return is_array( $data ) && isset( $data['is_calculate_based'] ) && ! empty( $data['is_calculate_based'] ) ? $data['is_calculate_based'] : '';
 	}
 
 	function isValidCalculateBased( $is_calculate_based = '' ) {
 		return is_string( $is_calculate_based ) && in_array( $is_calculate_based,
-				apply_filters( 'wlr_allowed_calculate_based', array(
+				apply_filters( 'wlr_allowed_calculate_based', [
 					'cart',
 					'order',
 					'product'
-				) ) );
+				] ) );
 	}
 
 	function generateBase64Encode( $data ) {
@@ -84,7 +84,7 @@ abstract class Base {
 				}
 			),
 			'value'
-		) : array();
+		) : [];
 	}
 
 
@@ -156,7 +156,7 @@ abstract class Base {
 		$comparison_quantity = isset( $options->qty ) ? $options->qty : 0;
 		$comparison_method   = isset( $options->operator ) ? $options->operator : 'in_list';
 		$comparison_method   = sanitize_text_field( $comparison_method );
-		$comparison_value    = (array) isset( $options->value ) ? $options->value : array();
+		$comparison_value    = (array) isset( $options->value ) ? $options->value : [];
 		$quantity            = 0;
 		foreach ( $items as $item ) {
 			if ( isset( $item['loyalty_free_product'] ) && $item['loyalty_free_product'] == 'yes' ) {
@@ -169,7 +169,7 @@ abstract class Base {
 			$qty     = 0;
 			$product = new stdClass();
 			if ( $is_calculate_base === 'cart' ) {
-				$product = isset( $item['data'] ) ? $item['data'] : array();
+				$product = isset( $item['data'] ) ? $item['data'] : [];
 				$qty     = (int) $item['quantity'];
 			} elseif ( $is_calculate_base === 'order' ) {
 				$product = version_compare( WC_VERSION, '4.4.0', '<' )
@@ -307,7 +307,7 @@ abstract class Base {
 		return false;
 	}*/
 
-	function match( $product, $type, $method, $values, $cart_item = array() ) {
+	function match( $product, $type, $method, $values, $cart_item = [] ) {
 		if ( is_a( $product, 'WC_Product' ) ) {
 			$method = ! empty( $method ) ? $method : 'in_list';
 			if ( 'all_products' === $type ) {
@@ -336,11 +336,11 @@ abstract class Base {
 	function compareWithAttributes( $product, $operation_values, $cart_item ) {
 		$woocommerce_helper = Woocommerce::getInstance();
 		$attrs              = $woocommerce_helper->getProductAttributes( $product );
-		$attr_ids           = array();
+		$attr_ids           = [];
 		if ( $woocommerce_helper->productTypeIs( $product, 'variation' ) ) {
 			if ( count( array_filter( $attrs ) ) < count( $attrs ) ) {
 				if ( isset( $cart_item['variation'] ) && ! empty( $cart_item['variation'] ) ) {
-					$attrs = array();
+					$attrs = [];
 					foreach ( $cart_item['variation'] as $attribute_name => $value ) {
 						$attrs[ str_replace( 'attribute_', '', $attribute_name ) ] = $value;
 					}
@@ -432,7 +432,7 @@ abstract class Base {
 		return count( array_intersect( $tag_ids, $operation_values ) ) > 0;
 	}
 
-	function getProductValues( $products = array() ) {
+	function getProductValues( $products = [] ) {
 		if ( empty( $products ) || ! is_array( $products ) ) {
 			return $products;
 		}
@@ -509,7 +509,7 @@ abstract class Base {
 				}
 			),
 			'value'
-		) : array();
+		) : [];
 		/*if (!empty($option_values)) {
 			$final_value = array();
 			foreach ($option_values as $sinle_value) {

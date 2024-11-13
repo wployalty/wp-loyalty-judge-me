@@ -12,11 +12,11 @@ defined( 'ABSPATH' ) or die();
 class PointForPurchase extends Order {
 	public static $instance = null;
 
-	public function __construct( $config = array() ) {
+	public function __construct( $config = [] ) {
 		parent::__construct( $config );
 	}
 
-	public static function getInstance( array $config = array() ) {
+	public static function getInstance( array $config = [] ) {
 		if ( ! self::$instance ) {
 			self::$instance = new self( $config );
 		}
@@ -25,10 +25,10 @@ class PointForPurchase extends Order {
 	}
 
 	function processMessage( $point_rule, $earning ) {
-		$messages             = array(
+		$messages             = [
 			'single'   => '',
 			'variable' => '',
-		);
+		];
 		$category_page        = ( is_shop() || is_product_category() );
 		$category_page        = apply_filters( 'wlr_is_product_category_page', $category_page );
 		$product_page         = is_product();
@@ -39,7 +39,7 @@ class PointForPurchase extends Order {
 		$is_rounded_edge      = isset( $point_rule->is_rounded_edge ) && $point_rule->is_rounded_edge == 'yes';
 
 		$point   = isset( $earning['point'] ) && ! empty( $earning['point'] ) ? (int) $earning['point'] : 0;
-		$rewards = isset( $earning['rewards'] ) && ! empty( $earning['rewards'] ) ? (array) $earning['rewards'] : array();
+		$rewards = isset( $earning['rewards'] ) && ! empty( $earning['rewards'] ) ? (array) $earning['rewards'] : [];
 		if ( empty( $point ) && empty( $rewards ) ) {
 			return $messages;
 		}
@@ -60,10 +60,10 @@ class PointForPurchase extends Order {
 			'wp-loyalty-judge-me' ) : '';
 		$variable_product_message = isset( $point_rule->variable_product_message ) && ! empty( $point_rule->variable_product_message ) ? __( $point_rule->variable_product_message,
 			'wp-loyalty-judge-me' ) : '';
-		if ( ( in_array( $display_page, array(
+		if ( ( in_array( $display_page, [
 					'all',
 					'single'
-				) ) && $product_page ) || ( in_array( $display_page, array( 'all', 'list' ) ) && $category_page ) ) {
+				] ) && $product_page ) || ( in_array( $display_page, [ 'all', 'list' ] ) && $category_page ) ) {
 			if ( ! empty( $single_product_message ) ) {
 				$single_product_message = Woocommerce::getCleanHtml( $single_product_message );
 				$messages['single']     = '<span class="wlr-product-message" style="' . esc_attr( $msg_style ) . '">' . $single_product_message . '</span>';
@@ -86,13 +86,13 @@ class PointForPurchase extends Order {
 			$reward_count = count( explode( ',', $available_rewards ) );
 		}
 		$woocommerce_helper = Woocommerce::getInstance();
-		$short_code_list    = apply_filters( 'wlr_point_for_purchase_message_shortcodes', array(
+		$short_code_list    = apply_filters( 'wlr_point_for_purchase_message_shortcodes', [
 			'{wlr_points}'         => $point > 0 ? $woocommerce_helper->numberFormatI18n( $point ) : '',
 			'{wlr_product_points}' => $point > 0 ? $woocommerce_helper->numberFormatI18n( $point ) : '',
 			'{wlr_points_label}'   => $this->getPointLabel( $point ),
 			'{wlr_reward_label}'   => $this->getRewardLabel( $reward_count ),
 			'{wlr_rewards}'        => $available_rewards,
-		) );
+		] );
 		foreach ( $messages as $key => $message ) {
 			if ( $point > 0 || ! empty( $available_rewards ) ) {
 				$messages[ $key ] = $this->processShortCodes( $short_code_list, $message );

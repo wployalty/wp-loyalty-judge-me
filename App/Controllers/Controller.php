@@ -20,7 +20,7 @@ class Controller {
 		if ( Woocommerce::hasAdminPrivilege() ) {
 			add_menu_page( __( 'WPLoyalty: Judge.me', 'wp-loyalty-judge-me' ),
 				__( 'WPLoyalty: Judge.me', 'wp-loyalty-judge-me' ), 'manage_woocommerce', WLJM_PLUGIN_SLUG,
-				array( $this, 'manageLoyaltyPages' ), 'dashicons-megaphone', 57 );
+				[ $this, 'manageLoyaltyPages' ], 'dashicons-megaphone', 57 );
 		}
 	}
 
@@ -32,10 +32,10 @@ class Controller {
 	}
 
 	function getReviewKeys() {
-		return array(
+		return [
 			'review/created',
 			'review/updated'
-		);
+		];
 	}
 
 	function manageLoyaltyPages() {
@@ -47,13 +47,13 @@ class Controller {
 			$path             = WLJM_PLUGIN_PATH . 'App/Views/Admin/main.php';
 			$review_keys      = $this->getReviewKeys();
 			$webhooks         = $this->getWebHooks();
-			$main_page_params = array(
+			$main_page_params = [
 				'webhook_list'     => $webhooks,
 				'review_keys'      => $review_keys,
 				'setting_nonce'    => wp_create_nonce( 'wljm-setting-nonce' ),
 				//'settings' => get_option('wljm_settings', array()),
-				'back_to_apps_url' => admin_url( 'admin.php?' . http_build_query( array( 'page' => WLR_PLUGIN_SLUG ) ) ) . '#/apps',
-			);
+				'back_to_apps_url' => admin_url( 'admin.php?' . http_build_query( [ 'page' => WLR_PLUGIN_SLUG ] ) ) . '#/apps',
+			];
 			/*$main_page_params = array(
 				'webhook_list' => array(
 					'review/created' => (object)array(
@@ -97,16 +97,16 @@ class Controller {
 		}
 		$this->removeAdminNotice();
 		wp_enqueue_style( WLJM_PLUGIN_SLUG . '-wljm-admin', WLJM_PLUGIN_URL . 'Assets/Admin/Css/wljm-admin.css',
-			array(), WLJM_PLUGIN_VERSION . '&t=' . time() );
-		wp_enqueue_style( WLJM_PLUGIN_SLUG . '-wlr-toast', WLJM_PLUGIN_URL . 'Assets/Admin/Css/wlr-toast.css', array(),
+			[], WLJM_PLUGIN_VERSION . '&t=' . time() );
+		wp_enqueue_style( WLJM_PLUGIN_SLUG . '-wlr-toast', WLJM_PLUGIN_URL . 'Assets/Admin/Css/wlr-toast.css', [],
 			WLJM_PLUGIN_VERSION . '&t=' . time() );
-		wp_enqueue_script( WLJM_PLUGIN_SLUG . '-wljm-admin', WLJM_PLUGIN_URL . 'Assets/Admin/Js/wljm-admin.js', array(),
+		wp_enqueue_script( WLJM_PLUGIN_SLUG . '-wljm-admin', WLJM_PLUGIN_URL . 'Assets/Admin/Js/wljm-admin.js', [],
 			WLJM_PLUGIN_VERSION . '&t=' . time() );
-		wp_enqueue_script( WLJM_PLUGIN_SLUG . '-wlr-toast', WLJM_PLUGIN_URL . 'Assets/Admin/Js/wlr-toast.js', array(),
+		wp_enqueue_script( WLJM_PLUGIN_SLUG . '-wlr-toast', WLJM_PLUGIN_URL . 'Assets/Admin/Js/wlr-toast.js', [],
 			WLJM_PLUGIN_VERSION . '&t=' . time() );
 		wp_enqueue_style( WLJM_PLUGIN_SLUG . '-wlr-font', WLJM_PLUGIN_SLUG . 'Assets/Site/Css/wlr-fonts.min.css',
-			array(), WLJM_PLUGIN_SLUG );
-		$localize = array(
+			[], WLJM_PLUGIN_SLUG );
+		$localize = [
 			'home_url'              => get_home_url(),
 			'admin_url'             => admin_url(),
 			'ajax_url'              => admin_url( 'admin-ajax.php' ),
@@ -119,7 +119,7 @@ class Controller {
 			'confirm_label'         => __( 'Are you sure?', 'wp-loyalty-judge-me' ),
 			'saving_button_label'   => __( 'Saving...', 'wp-loyalty-judge-me' ),
 			'saved_button_label'    => __( 'Save', 'wp-loyalty-judge-me' ),
-		);
+		];
 		wp_localize_script( WLJM_PLUGIN_SLUG . '-wljm-admin', 'wljm_localize_data', $localize );
 	}
 
@@ -138,14 +138,14 @@ class Controller {
 		$token          = get_option( 'judgeme_shop_token' );
 		$api_url        = 'https://judge.me/api/v1/';
 		$url            = $api_url . 'webhooks';
-		$webhook_params = array(
+		$webhook_params = [
 			'api_token'   => $token,
 			'shop_domain' => $domain,
-		);
-		$response       = wp_remote_get( $url, array(
+		];
+		$response       = wp_remote_get( $url, [
 			'body' => $webhook_params
-		) );
-		$return         = array();
+		] );
+		$return         = [];
 		if ( is_wp_error( $response ) ) {
 			$error_message = $response->get_error_message();
 			$logger        = wc_get_logger();
@@ -157,10 +157,10 @@ class Controller {
 			if ( is_object( $body ) && isset( $body->webhooks ) && ! empty( $body->webhooks ) ) {
 				foreach ( $body->webhooks as $webhook ) {
 					if ( in_array( $webhook->key,
-							$review_keys ) && ! isset( $return[ $webhook->key ] ) && in_array( $webhook->url, array(
+							$review_keys ) && ! isset( $return[ $webhook->key ] ) && in_array( $webhook->url, [
 							$this->getDomainUrl() . '/wp-json/wployalty/judgeme/v1/review/created',
 							$this->getDomainUrl() . '/wp-json/wployalty/judgeme/v1/review/updated'
-						) ) ) {
+						] ) ) {
 						$return[ $webhook->key ] = $webhook;
 					}
 				}
@@ -172,7 +172,7 @@ class Controller {
 
 	function deleteWebHook() {
 		$wljm_nonce = (string) Input::get( 'wljm_nonce', '' );
-		$response   = array();
+		$response   = [];
 		if ( ! Woocommerce::hasAdminPrivilege() || ! Woocommerce::verify_nonce( $wljm_nonce, 'wljm_delete_nonce' ) ) {
 			$response['success'] = false;
 			$response['message'] = __( 'Basic validation failed', 'wp-loyalty-judge-me' );
@@ -198,7 +198,7 @@ class Controller {
 
 	function createWebHook() {
 		$wljm_nonce = (string) Input::get( 'wljm_nonce', '' );
-		$response   = array();
+		$response   = [];
 		if ( ! Woocommerce::hasAdminPrivilege() || ! Woocommerce::verify_nonce( $wljm_nonce, 'wljm_create_nonce' ) ) {
 			$response['success'] = false;
 			$response['message'] = __( 'Basic validation failed', 'wp-loyalty-judge-me' );
@@ -227,17 +227,17 @@ class Controller {
 		$token          = get_option( 'judgeme_shop_token' );
 		$api_url        = 'https://judge.me/api/v1/';
 		$url            = $api_url . 'webhooks';
-		$webhook_params = array(
+		$webhook_params = [
 			'api_token'   => $token,
 			'shop_domain' => $domain,
 			'key'         => $key,
 			'url'         => $this->getDomainUrl() . '/wp-json/wployalty/judgeme/v1/' . $key
-		);
-		$response       = wp_remote_post( $url, array(
+		];
+		$response       = wp_remote_post( $url, [
 			'method'  => 'DELETE',
-			'headers' => array( 'Content-Type' => 'application/json' ),
+			'headers' => [ 'Content-Type' => 'application/json' ],
 			'body'    => json_encode( $webhook_params )
-		) );
+		] );
 		if ( is_wp_error( $response ) ) {
 			$error_message = $response->get_error_message();
 			$logger        = wc_get_logger();
@@ -259,20 +259,20 @@ class Controller {
 		$token          = get_option( 'judgeme_shop_token' );
 		$api_url        = 'https://judge.me/api/v1/';
 		$url            = $api_url . 'webhooks';
-		$webhook_params = array(
+		$webhook_params = [
 			'api_token'   => $token,
 			'shop_domain' => $domain,
-			'webhook'     => array(
+			'webhook'     => [
 				'key' => $key,
 				'url' => $this->getDomainUrl() . '/wp-json/wployalty/judgeme/v1/' . $key
-			)
-		);
+			]
+		];
 
-		$response = wp_remote_post( $url, array(
+		$response = wp_remote_post( $url, [
 			'method'  => 'POST',
-			'headers' => array( 'Content-Type' => 'application/json' ),
+			'headers' => [ 'Content-Type' => 'application/json' ],
 			'body'    => json_encode( $webhook_params )
-		) );
+		] );
 		if ( is_wp_error( $response ) ) {
 			$error_message = $response->get_error_message();
 			$logger        = wc_get_logger();
@@ -287,23 +287,23 @@ class Controller {
 
 	function register_wp_api_endpoints() {
 		$namespace = 'wployalty/judgeme/v1';
-		register_rest_route( $namespace, '/review/created', array(
+		register_rest_route( $namespace, '/review/created', [
 			'methods'             => 'POST',
-			'callback'            => array( $this, 'webhook_review_created_callback' ),
+			'callback'            => [ $this, 'webhook_review_created_callback' ],
 			'permission_callback' => '__return_true', // authentication is handled in the callback
-		) );
-		register_rest_route( $namespace, '/review/updated', array(
+		] );
+		register_rest_route( $namespace, '/review/updated', [
 			'methods'             => 'POST',
-			'callback'            => array( $this, 'webhook_review_updated_callback' ),
+			'callback'            => [ $this, 'webhook_review_updated_callback' ],
 			'permission_callback' => '__return_true', // authentication is handled in the callback
-		) );
+		] );
 	}
 
 	public function webhook_review_created_callback( $data ) {
 		$token           = get_option( 'judgeme_shop_token' );
 		$header_hashed   = $data->get_header( 'JUDGEME-HMAC-SHA256' );
 		$internal_hashed = hash_hmac( 'sha256', $data->get_body(), $token, false );
-		$response        = array();
+		$response        = [];
 		if ( hash_equals( $header_hashed, $internal_hashed ) ) {
 			$body           = $data->get_json_params();
 			$review_id      = $body['review']['id'];
@@ -313,12 +313,12 @@ class Controller {
 			if ( $prod_id > 0 && ! empty( $reviewer_email ) && filter_var( $reviewer_email, FILTER_VALIDATE_EMAIL ) ) {
 				$woocommerce           = new Woocommerce();
 				$product_review_helper = new ProductReview();
-				$action_data           = array(
+				$action_data           = [
 					'user_email'         => $reviewer_email,
 					'product_id'         => $prod_id,
 					'is_calculate_based' => 'product',
 					'product'            => $woocommerce->getProduct( $prod_id )
-				);
+				];
 				$product_review_helper->applyEarnProductReview( $action_data );
 			}
 			$response['success'] = true;
@@ -335,7 +335,7 @@ class Controller {
 		$token           = get_option( 'judgeme_shop_token' );
 		$header_hashed   = $data->get_header( 'JUDGEME-HMAC-SHA256' );
 		$internal_hashed = hash_hmac( 'sha256', $data->get_body(), $token, false );
-		$response        = array();
+		$response        = [];
 		if ( hash_equals( $header_hashed, $internal_hashed ) ) {
 			$body           = $data->get_json_params();
 			$review_id      = $body['review']['id'];
@@ -345,12 +345,12 @@ class Controller {
 			if ( $prod_id > 0 && ! empty( $reviewer_email ) && filter_var( $reviewer_email, FILTER_VALIDATE_EMAIL ) ) {
 				$woocommerce           = new Woocommerce();
 				$product_review_helper = new ProductReview();
-				$action_data           = array(
+				$action_data           = [
 					'user_email'         => $reviewer_email,
 					'product_id'         => $prod_id,
 					'is_calculate_based' => 'product',
 					'product'            => $woocommerce->getProduct( $prod_id )
-				);
+				];
 				$product_review_helper->applyEarnProductReview( $action_data );
 			}
 			$response['success'] = true;
@@ -374,15 +374,15 @@ class Controller {
 			return;
 		}
 		$earn_campaign    = EarnCampaign::getInstance();
-		$cart_action_list = array(
+		$cart_action_list = [
 			'product_review'
-		);
-		$extra            = array(
+		];
+		$extra            = [
 			'user_email'         => $woocommerce->get_login_user_email(),
 			'product_id'         => $post_id,
 			'is_calculate_based' => 'product',
 			'product'            => $woocommerce->getProduct( $post_id )
-		);
+		];
 		$reward_list      = $earn_campaign->getActionEarning( $cart_action_list, $extra );
 		$message          = '';
 		foreach ( $reward_list as $action => $rewards ) {

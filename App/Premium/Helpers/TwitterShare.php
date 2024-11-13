@@ -15,7 +15,7 @@ use Wljm\App\Helpers\Woocommerce;
 class TwitterShare extends Base {
 	public static $instance = null;
 
-	public function __construct( $config = array() ) {
+	public function __construct( $config = [] ) {
 		parent::__construct( $config );
 	}
 
@@ -25,7 +25,7 @@ class TwitterShare extends Base {
 			$message = Woocommerce::getCleanHtml( __( $point_rule->share_message, 'wp-loyalty-judge-me' ) );
 		}
 		$point             = isset( $earning['point'] ) && ! empty( $earning['point'] ) ? (int) $earning['point'] : 0;
-		$rewards           = isset( $earning['rewards'] ) && ! empty( $earning['rewards'] ) ? (array) $earning['rewards'] : array();
+		$rewards           = isset( $earning['rewards'] ) && ! empty( $earning['rewards'] ) ? (array) $earning['rewards'] : [];
 		$available_rewards = '';
 		foreach ( $rewards as $single_reward ) {
 			if ( is_object( $single_reward ) && isset( $single_reward->display_name ) ) {
@@ -41,13 +41,13 @@ class TwitterShare extends Base {
 		$woocommerce_helper = Woocommerce::getInstance();
 		if ( ( $point > 0 || ! empty( $available_rewards ) ) && ! empty( $message ) ) {
 			$point           = $this->roundPoints( $point );
-			$short_code_list = array(
+			$short_code_list = [
 				'{wlr_points}'       => $point > 0 ? $woocommerce_helper->numberFormatI18n( $point ) : '',
 				'{wlr_points_label}' => $this->getPointLabel( $point ),
 				'{wlr_rewards}'      => $available_rewards,
 				'{wlr_reward_label}' => $this->getRewardLabel( $reward_count ),
 				'{wlr_referral_url}' => $this->getReferralUrl()
-			);
+			];
 			$display_message = $this->processShortCodes( $short_code_list, $message );
 		}
 

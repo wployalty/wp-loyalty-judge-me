@@ -11,9 +11,9 @@ use Exception;
 
 class Base {
 	public static $user_model, $earn_campaign_transaction_model, $user_by_email;
-	public static $user_reward_by_coupon = array();
+	public static $user_reward_by_coupon = [];
 
-	public function __construct( $config = array() ) {
+	public function __construct( $config = [] ) {
 		self::$user_model                      = empty( self::$user_model ) ? new Users() : self::$user_model;
 		self::$earn_campaign_transaction_model = empty( self::$earn_campaign_transaction_model ) ? new EarnCampaignTransactions() : self::$earn_campaign_transaction_model;
 	}
@@ -33,17 +33,17 @@ class Base {
 		return apply_filters( 'wlr_get_point_label', $point_label, $point );
 	}
 
-	function isEligibleForEarn( $action_type, $extra = array() ) {
+	function isEligibleForEarn( $action_type, $extra = [] ) {
 		return apply_filters( 'wlr_is_eligible_for_earning', true, $action_type, $extra );
 	}
 
 	function getTotalEarning(
 		$action_type = '',
-		$ignore_condition = array(),
-		$extra = array(),
+		$ignore_condition = [],
+		$extra = [],
 		$is_product_level = false
 	) {
-		$earning            = array();
+		$earning            = [];
 		$woocommerce_helper = Woocommerce::getInstance();
 		if ( ! $this->is_valid_action( $action_type ) || ! $this->isEligibleForEarn( $action_type,
 				$extra ) || $woocommerce_helper->isBannedUser() ) {
@@ -54,11 +54,11 @@ class Base {
 		$campaign_list       = $earn_campaign_table->getCampaignByAction( $action_type );
 
 		if ( ! empty( $campaign_list ) ) {
-			$action_data = array(
+			$action_data = [
 				'action_type'      => $action_type,
 				'ignore_condition' => $ignore_condition,
 				'is_product_level' => $is_product_level,
-			);
+			];
 			if ( ! empty( $extra ) && is_array( $extra ) ) {
 				foreach ( $extra as $key => $value ) {
 					$action_data[ $key ] = $value;
@@ -78,7 +78,7 @@ class Base {
 					}
 				}
 				$action_data['campaign_id'] = $campaign_id;
-				$campaign_earning           = array();
+				$campaign_earning           = [];
 				if ( isset( $processing_campaign->earn_campaign->campaign_type ) && 'point' === $processing_campaign->earn_campaign->campaign_type ) {
 					//campaign_id and order_id
 					$woocommerce_helper->_log( 'getTotalEarning Action:' . $action_type . ',Campaign id:' . $campaign_id . ', Before earn point:' . json_encode( $action_data ) );
@@ -101,7 +101,7 @@ class Base {
 	}
 
 	function processCampaignMessage( $action_type, $rule, $earning ) {
-		$messages           = array();
+		$messages           = [];
 		$woocommerce_helper = Woocommerce::getInstance();
 		if ( ! empty( $action_type ) && $action_type === $rule->earn_campaign->action_type ) {
 			if ( isset( $rule->earn_campaign->point_rule ) && ! empty( $rule->earn_campaign->point_rule ) ) {
@@ -211,12 +211,12 @@ class Base {
 				$ref_code = $prefix . $this->get_random_code();
 			}
 			$ref_code = sanitize_text_field( $ref_code );
-			$user     = self::$user_model->getQueryData( array(
-				'refer_code' => array(
+			$user     = self::$user_model->getQueryData( [
+				'refer_code' => [
 					'operator' => '=',
 					'value'    => $ref_code
-				)
-			), '*', array(), false );
+				]
+			], '*', [], false );
 			if ( ! empty( $user ) ) {
 				return $this->get_unique_refer_code( $ref_code, true, $email );
 			}
@@ -259,28 +259,28 @@ class Base {
 		if ( empty( $achievement_key ) ) {
 			return '';
 		}
-		$achievement_names = array(
+		$achievement_names = [
 			'level_update'  => __( 'Level Update', 'wp-loyalty-judge-me' ),
 			'daily_login'   => __( 'Daily Login', 'wp-loyalty-judge-me' ),
 			'custom_action' => __( 'Custom Action', 'wp-loyalty-judge-me' ),
-		);
+		];
 		$achievement_names = apply_filters( 'wlr_achievement_names', $achievement_names, $achievement_key );
 
 		return isset( $achievement_names[ $achievement_key ] ) && ! empty( $achievement_names[ $achievement_key ] ) ? $achievement_names[ $achievement_key ] : '';
 	}
 
-	function updatePointLedger( $data = array(), $point_action = 'credit', $is_update = true ) {
+	function updatePointLedger( $data = [], $point_action = 'credit', $is_update = true ) {
 		if ( ! is_array( $data ) || empty( $data['user_email'] ) || ( $data['points'] <= 0 && ! $this->isValidPointLedgerExtraAction( $data['action_type'] ) ) || empty( $data['action_type'] ) ) {
 			return false;
 		}
-		$conditions               = array(
-			'user_email' => array(
+		$conditions               = [
+			'user_email' => [
 				'operator' => '=',
 				'value'    => sanitize_email( $data['user_email'] ),
-			),
-		);
+			],
+		];
 		$point_ledger             = new PointsLedger();
-		$user_ledger              = $point_ledger->getQueryData( $conditions, '*', array(), false );
+		$user_ledger              = $point_ledger->getQueryData( $conditions, '*', [], false );
 		$point_ledger_is_starting = false;
 		if ( empty( $user_ledger ) ) {
 			/*$user = self::$user_model->getQueryData($conditions, '*', array(), false);
@@ -288,7 +288,7 @@ class Base {
             if ($this->isValidExtraAction($data['action_type']) && empty($credit_points)) {
                 $credit_points = (isset($data['points']) && $data['points'] > 0 ? $data['points'] : 0);
             }*/
-			$point_data = array(
+			$point_data = [
 				'user_email'          => $data['user_email'],
 				'credit_points'       => (int) isset( $data['points'] ) && $data['points'] > 0 ? $data['points'] : 0,
 				'action_type'         => 'starting_point',
@@ -298,12 +298,12 @@ class Base {
 				'created_at'          => strtotime(
 					date( 'Y-m-d H:i:s' )
 				),
-			);
+			];
 			$point_ledger->insertRow( $point_data );
 			$point_ledger_is_starting = true;
 		}
 		if ( $is_update && ! $point_ledger_is_starting ) {
-			$point_data = array(
+			$point_data = [
 				'user_email'          => $data['user_email'],
 				'credit_points'       => $point_action == 'credit' ? $data['points'] : 0,
 				'action_type'         => $data['action_type'],
@@ -311,7 +311,7 @@ class Base {
 				'action_process_type' => isset( $data['action_process_type'] ) && ! empty( $data['action_process_type'] ) ? $data['action_process_type'] : $data['action_type'],
 				'note'                => isset( $data['note'] ) && ! empty( $data['note'] ) ? $data['note'] : '',
 				'created_at'          => strtotime( date( 'Y-m-d H:i:s' ) ),
-			);
+			];
 			$point_ledger->insertRow( $point_data );
 		}
 
@@ -319,11 +319,11 @@ class Base {
 	}
 
 	function isValidPointLedgerExtraAction( $action_type ) {
-		$action_types = apply_filters( 'wlr_extra_point_ledger_action_list', array(
+		$action_types = apply_filters( 'wlr_extra_point_ledger_action_list', [
 			'new_user_add',
 			'admin_change',
 			'import'
-		) );
+		] );
 
 		return ! empty( $action_type ) && in_array( $action_type, $action_types );
 	}
@@ -356,14 +356,14 @@ class Base {
 
 		if ( ! isset( self::$user_by_email[ $user_email ] ) ) {
 			self::$user_by_email[ $user_email ] = self::$user_model->getQueryData(
-				array(
-					'user_email' => array(
+				[
+					'user_email' => [
 						'operator' => '=',
 						'value'    => $user_email,
-					),
-				),
+					],
+				],
 				'*',
-				array(),
+				[],
 				false
 			);
 		}
@@ -372,12 +372,12 @@ class Base {
 	}
 
 	function getSocialActionList() {
-		$social_action_list = array(
+		$social_action_list = [
 			'facebook_share',
 			'twitter_share',
 			'whatsapp_share',
 			'email_share'
-		);
+		];
 
 		return apply_filters( 'wlr_social_action_list', $social_action_list );
 	}
@@ -395,7 +395,7 @@ class Base {
 	}
 
 	function getExtraActionList() {
-		$action_list = array(
+		$action_list = [
 			'admin_change'             => __( 'Admin updated', 'wp-loyalty-judge-me' ),
 			'redeem_point'             => sprintf( __( 'Convert %s to coupon', 'wp-loyalty-judge-me' ),
 				$this->getPointLabel( 3 ) ),
@@ -409,7 +409,7 @@ class Base {
 			'new_level'                => __( 'New Level', 'wp-loyalty-judge-me' ),
 			'rest_api'                 => __( 'REST API', 'wp-loyalty-judge-me' ),
 			'birthday_change'          => __( 'Birthday change', 'wp-loyalty-judge-me' )
-		);
+		];
 
 		return apply_filters( "wlr_extra_action_list", $action_list );
 	}
@@ -421,14 +421,14 @@ class Base {
 		$code = ( is_object( $code ) && isset( $code->code ) ) ? $code->get_code() : $code;
 		if ( ! isset( self::$user_reward_by_coupon[ $code ] ) ) {
 			self::$user_reward_by_coupon[ $code ] = ( new UserRewards() )->getQueryData(
-				array(
-					'discount_code' => array(
+				[
+					'discount_code' => [
 						'operator' => '=',
 						'value'    => $code,
-					),
-				),
+					],
+				],
 				'*',
-				array(),
+				[],
 				false
 			);
 		}
@@ -441,7 +441,7 @@ class Base {
 			return false;
 		}
 		global $wpdb;
-		$where  = $wpdb->prepare( 'order_id = %s AND campaign_id = %s', array( $order_id, $campaign_id ) );
+		$where  = $wpdb->prepare( 'order_id = %s AND campaign_id = %s', [ $order_id, $campaign_id ] );
 		$result = ( new EarnCampaignTransactions() )->getWhere( $where );
 
 		return ! empty( $result );
@@ -490,7 +490,7 @@ class Base {
 
 	function isIncludingTax() {
 		$woocommerce_helper   = Woocommerce::getInstance();
-		$setting_option       = $woocommerce_helper->getOptions( 'wlr_settings', array() );
+		$setting_option       = $woocommerce_helper->getOptions( 'wlr_settings', [] );
 		$tax_calculation_type = ( isset( $setting_option['tax_calculation_type'] ) && ! empty( $setting_option['tax_calculation_type'] ) ) ? $setting_option['tax_calculation_type'] : 'inherit';
 		$is_including_tax     = false;
 		if ( $tax_calculation_type == 'inherit' ) {
@@ -520,13 +520,13 @@ class Base {
 		$status      = true;
 		$point       = apply_filters( 'wlr_before_add_earn_point', $point, $action_type, $action_data );
 		$point       = apply_filters( 'wlr_notify_before_add_earn_point', $point, $action_type, $action_data );
-		$conditions  = array(
-			'user_email' => array(
+		$conditions  = [
+			'user_email' => [
 				'operator' => '=',
 				'value'    => sanitize_email( $action_data['user_email'] ),
-			),
-		);
-		$user        = self::$user_model->getQueryData( $conditions, '*', array(), false );
+			],
+		];
+		$user        = self::$user_model->getQueryData( $conditions, '*', [], false );
 		$created_at  = strtotime( date( 'Y-m-d H:i:s' ) );
 		$id          = 0;
 		if ( ! empty( $user ) && $user->id > 0 ) {
@@ -560,20 +560,20 @@ class Base {
 
 			$birthday_date = isset( $action_data['birthday_date'] ) && ! empty( $action_data['birthday_date'] ) ? $action_data['birthday_date'] : $user->birthday_date;
 			$birth_date    = empty( $birthday_date ) || $birthday_date == '0000-00-00' ? $user->birth_date : strtotime( $birthday_date );
-			$_data         = array(
+			$_data         = [
 				'points'            => (int) $user->points,
 				'earn_total_point'  => (int) $user->earn_total_point,
 				'birth_date'        => $birth_date,
 				'birthday_date'     => $birthday_date,
 				'used_total_points' => (int) $user->used_total_points,
-			);
+			];
 		} else {
 			if ( $trans_type == 'debit' ) {
 				$point = 0;
 			}
 			$ref_code        = isset( $action_data['referral_code'] ) && ! empty( $action_data['referral_code'] ) ? $action_data['referral_code'] : '';
 			$uniqueReferCode = $this->get_unique_refer_code( $ref_code, false, $action_data['user_email'] );
-			$_data           = array(
+			$_data           = [
 				'user_email'        => sanitize_email( $action_data['user_email'] ),
 				'refer_code'        => $uniqueReferCode,
 				'used_total_points' => 0,
@@ -582,21 +582,21 @@ class Base {
 				'birth_date'        => 0,
 				'birthday_date'     => null,
 				'created_date'      => $created_at,
-			);
+			];
 		}
-		$ledger_data = array(
+		$ledger_data = [
 			'user_email'          => $action_data['user_email'],
 			'points'              => (int) $point,
 			'action_type'         => $action_type,
 			'action_process_type' => isset( $action_data['action_process_type'] ) && ! empty( $action_data['action_process_type'] ) ? $action_data['action_process_type'] : $action_type,
 			'note'                => isset( $action_data['note'] ) && ! empty( $action_data['note'] ) ? $action_data['note'] : '',
 			'created_at'          => $created_at,
-		);
+		];
 		$woocommerce_helper->_log( 'Extra Action :' . $action_type . ',Point:' . $point . ', Ledger data:' . json_encode( $ledger_data ) );
 		$ledger_status = $this->updatePointLedger( $ledger_data, $trans_type );
 		$woocommerce_helper->_log( 'Extra Action :' . $action_type . ',Point:' . $point . ', User data:' . json_encode( $_data ) );
 		if ( $ledger_status && self::$user_model->insertOrUpdate( $_data, $id ) ) {
-			$args = array(
+			$args = [
 				'user_email'       => $action_data['user_email'],
 				'action_type'      => $action_type,
 				'campaign_type'    => 'point',
@@ -617,7 +617,7 @@ class Base {
 				'customer_command' => isset( $action_data['customer_command'] ) && ! empty( $action_data['customer_command'] ) ? $action_data['customer_command'] : '',
 				'action_sub_type'  => isset( $action_data['action_sub_type'] ) && ! empty( $action_data['action_sub_type'] ) ? $action_data['action_sub_type'] : '',
 				'action_sub_value' => isset( $action_data['action_sub_value'] ) && ! empty( $action_data['action_sub_value'] ) ? $action_data['action_sub_value'] : '',
-			);
+			];
 			if ( is_admin() ) {
 				$admin_user            = wp_get_current_user();
 				$args['admin_user_id'] = $admin_user->ID;
@@ -635,7 +635,7 @@ class Base {
 					}
 				}
 				if ( $status ) {
-					$log_data = array(
+					$log_data = [
 						'user_email'          => sanitize_email( $action_data['user_email'] ),
 						'action_type'         => $action_type,
 						'earn_campaign_id'    => (int) $earn_trans_id > 0 ? $earn_trans_id : 0,
@@ -657,7 +657,7 @@ class Base {
 						'reward_display_name' => isset( $action_data['reward_display_name'] ) && ! empty( $action_data['reward_display_name'] ) ? $action_data['reward_display_name'] : null,
 						'required_points'     => (int) isset( $action_data['required_points'] ) && ! empty( $action_data['required_points'] ) ? $action_data['required_points'] : 0,
 						'discount_code'       => isset( $action_data['discount_code'] ) && ! empty( $action_data['discount_code'] ) ? $action_data['discount_code'] : null,
-					);
+					];
 					$woocommerce_helper->_log( 'Extra Action :' . $action_type . ',Point:' . $point . ', Log data:' . json_encode( $log_data ) );
 					$this->add_note( $log_data );
 				}

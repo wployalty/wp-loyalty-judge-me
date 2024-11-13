@@ -15,10 +15,10 @@ use Wljm\App\Models\UserRewards;
 
 class EarnCampaign extends Base {
 	public static $instance = null;
-	public static $single_campaign = array();
-	public $earn_campaign, $available_conditions = array();
+	public static $single_campaign = [];
+	public $earn_campaign, $available_conditions = [];
 
-	public static function getInstance( array $config = array() ) {
+	public static function getInstance( array $config = [] ) {
 		if ( ! self::$instance ) {
 			self::$instance = new self( $config );
 		}
@@ -48,27 +48,27 @@ class EarnCampaign extends Base {
 			$action_type, $action_data );
 		$point      = apply_filters( 'wlr_notify_before_add_earn_point', $point,
 			$action_type, $action_data );
-		$conditions = array(
-			'user_email' => array(
+		$conditions = [
+			'user_email' => [
 				'operator' => '=',
 				'value'    => sanitize_email( $action_data['user_email'] )
-			)
-		);
+			]
+		];
 		$user       = self::$user_model->getQueryData( $conditions, '*',
-			array(), false, true );
+			[], false, true );
 		$id         = 0;
 		if ( ! empty( $user ) && $user->id > 0 ) {
 			$id               = $user->id;
 			$user->points     += $point;
 			$earn_total_point = $user->earn_total_point + $point;
-			$_data            = array(
+			$_data            = [
 				'points'           => $user->points,
 				'earn_total_point' => $earn_total_point
-			);
+			];
 		} else {
 			$uniqueReferCode = $this->get_unique_refer_code( '', false,
 				$action_data['user_email'] );
-			$_data           = array(
+			$_data           = [
 				'user_email'        => sanitize_email( $action_data['user_email'] ),
 				'refer_code'        => $uniqueReferCode,
 				'used_total_points' => 0,
@@ -76,7 +76,7 @@ class EarnCampaign extends Base {
 				'earn_total_point'  => $point,
 				'birth_date'        => 0,
 				'created_date'      => strtotime( date( "Y-m-d H:i:s" ) ),
-			);
+			];
 		}
 		if ( ( isset( $action_data['order_id'] )
 		       && ! empty( $action_data['order_id'] )
@@ -91,7 +91,7 @@ class EarnCampaign extends Base {
 				$_data['birthday_date'] = $user_dob;
 			}
 		}
-		$ledger_data = array(
+		$ledger_data = [
 			'user_email'  => $action_data['user_email'],
 			'points'      => $point,
 			'action_type' => $action_type,
@@ -104,7 +104,7 @@ class EarnCampaign extends Base {
 					$this->getActionName( $action_type ),
 					$this->getAchievementName( $action_data['action_sub_type'] ) ),
 			'created_at'  => strtotime( date( "Y-m-d H:i:s" ) )
-		);
+		];
 		$woocommerce_helper->_log( 'Action :' . $action_type
 		                           . ',Campaign id:' . $campaign_id
 		                           . ', Ledger data:'
@@ -120,7 +120,7 @@ class EarnCampaign extends Base {
 		if ( $action_type == 'referral' ) {
 			$woocommerce_helper->set_referral_code( '' );
 		}
-		$args = array(
+		$args = [
 			'user_email'       => $action_data['user_email'],
 			'points'           => (int) $point,
 			'action_type'      => $action_type,
@@ -143,7 +143,7 @@ class EarnCampaign extends Base {
 			'action_sub_value' => isset( $action_data['action_sub_value'] )
 			                      && ! empty( $action_data['action_sub_value'] )
 				? $action_data['action_sub_value'] : '',
-		);
+		];
 		if ( ( isset( $action_data['order_currency'] )
 		       && ! empty( $action_data['order_currency'] ) )
 		) {
@@ -213,7 +213,7 @@ class EarnCampaign extends Base {
 					$order_obj->add_order_note( $order_note );
 				}
 			}
-			$log_data = array(
+			$log_data = [
 				'user_email'          => sanitize_email( $action_data['user_email'] ),
 				'action_type'         => $action_type,
 				'earn_campaign_id'    => $earn_trans_id,
@@ -236,7 +236,7 @@ class EarnCampaign extends Base {
 				'referral_type'       => isset( $action_data['referral_type'] )
 				                         && ! empty( $action_data['referral_type'] )
 					? $action_data['referral_type'] : '',
-			);
+			];
 			$woocommerce_helper->_log( 'Action :' . $action_type
 			                           . ',Campaign id:' . $campaign_id
 			                           . ', Log data:'
@@ -265,10 +265,10 @@ class EarnCampaign extends Base {
 	}
 
 	function getActionEarning( $cart_action_list, $extra ) {
-		$reward_list = array();
+		$reward_list = [];
 		foreach ( $cart_action_list as $action_type ) {
 			$reward_list[ $action_type ] = $this->getTotalEarning( $action_type,
-				array(), $extra );
+				[], $extra );
 		}
 
 		return $reward_list;
@@ -340,7 +340,7 @@ class EarnCampaign extends Base {
 		if ( empty( $user ) ) {
 			$uniqueReferCode = $this->get_unique_refer_code( '', false,
 				$action_data['user_email'] );
-			$_data           = array(
+			$_data           = [
 				'user_email'        => $action_data['user_email'],
 				'refer_code'        => $uniqueReferCode,
 				'points'            => 0,
@@ -350,7 +350,7 @@ class EarnCampaign extends Base {
 					? strtotime( $user_dob ) : 0,
 				'birthday_date'     => $user_dob,
 				'created_date'      => strtotime( date( "Y-m-d H:i:s" ) ),
-			);
+			];
 			$woocommerce_helper->_log( 'Action :' . $action_type
 			                           . ',Campaign id:' . $campaign_id
 			                           . ',Reward id :' . $reward->id
@@ -372,7 +372,7 @@ class EarnCampaign extends Base {
 		) {
 			$user_dob = $action_data['order']->get_meta( 'wlr_dob' );
 			if ( ! empty( $user_dob ) ) {
-				$_data  = array( 'birth_date' => $user_dob );
+				$_data  = [ 'birth_date' => $user_dob ];
 				$status = (bool) self::$user_model->insertOrUpdate( $_data,
 					$user->id );
 			}
@@ -384,7 +384,7 @@ class EarnCampaign extends Base {
 		if ( $action_type == 'referral' ) {
 			$woocommerce_helper->set_referral_code( '' );
 		}
-		$args = array(
+		$args = [
 			'user_email'       => $action_data['user_email'],
 			'points'           => 0,
 			'action_type'      => $action_type,
@@ -408,7 +408,7 @@ class EarnCampaign extends Base {
 			'action_sub_value' => isset( $action_data['action_sub_value'] )
 			                      && ! empty( $action_data['action_sub_value'] )
 				? $action_data['action_sub_value'] : '',
-		);
+		];
 		if ( ( isset( $action_data['order_currency'] )
 		       && ! empty( $action_data['order_currency'] ) )
 		) {
@@ -470,7 +470,7 @@ class EarnCampaign extends Base {
 		if ( ! $status ) {
 			return false;
 		}
-		$user_reward_data = array(
+		$user_reward_data = [
 			'name'                   => $reward->name,
 			'description'            => $reward->description,
 			'email'                  => sanitize_email( $action_data['user_email'] ),
@@ -500,7 +500,7 @@ class EarnCampaign extends Base {
 			'expire_email_period'    => $reward->expire_email_period,
 			'created_at'             => strtotime( date( "Y-m-d H:i:s" ) ),
 			'modified_at'            => 0
-		);
+		];
 		$woocommerce_helper->_log( 'Action :' . $action_type
 		                           . ',Campaign id:' . $campaign_id
 		                           . ',Reward id :' . $reward->id
@@ -540,7 +540,7 @@ class EarnCampaign extends Base {
 					$order_obj->add_order_note( $order_note );
 				}
 			}
-			$log_data = array(
+			$log_data = [
 				'user_email'          => sanitize_email( $action_data['user_email'] ),
 				'action_type'         => $action_type,
 				'reward_id'           => $reward->id,
@@ -564,7 +564,7 @@ class EarnCampaign extends Base {
 				'referral_type'       => isset( $action_data['referral_type'] )
 				                         && ! empty( $action_data['referral_type'] )
 					? $action_data['referral_type'] : '',
-			);
+			];
 			$woocommerce_helper->_log( 'Action :' . $action_type
 			                           . ',Campaign id:' . $campaign_id
 			                           . ',Reward id :' . $reward->id
@@ -592,9 +592,9 @@ class EarnCampaign extends Base {
 					if ( isset( $user_reward_table->discount_code )
 					     && empty( $user_reward_table->discount_code )
 					) {
-						$update_data                 = array(
+						$update_data                 = [
 							'start_at' => strtotime( date( "Y-m-d H:i:s" ) ),
-						);
+						];
 						$user_reward_table->start_at = $update_data['start_at'];
 						if ( $user_reward_table->expire_after > 0 ) {
 							$expire_period
@@ -635,7 +635,7 @@ class EarnCampaign extends Base {
 						                           . $reward->id
 						                           . ', auto generate Update data:'
 						                           . json_encode( $update_data ) );
-						$update_where = array( 'id' => $user_reward_table->id );
+						$update_where = [ 'id' => $user_reward_table->id ];
 						$user_reward_model->updateRow( $update_data,
 							$update_where );
 					}
@@ -714,7 +714,7 @@ class EarnCampaign extends Base {
 		if ( empty( $type ) ) {
 			return null;
 		}
-		$reward = array();
+		$reward = [];
 		if ( $type == 'point' ) {
 			$reward = 0;
 		}
@@ -928,7 +928,7 @@ class EarnCampaign extends Base {
 	}
 
 	public function getAvailableConditions() {
-		$available_conditions = array();
+		$available_conditions = [];
 		//Read the conditions directory and create condition object
 		if ( file_exists( WLJM_PLUGIN_PATH . 'App/Conditions/' ) ) {
 			$conditions_list = array_slice( scandir( WLJM_PLUGIN_PATH
@@ -950,12 +950,12 @@ class EarnCampaign extends Base {
 					) {
 						$condition_name = $condition_object->name();
 						if ( ! empty( $condition_name ) ) {
-							$available_conditions[ $condition_name ] = array(
+							$available_conditions[ $condition_name ] = [
 								'object'       => $condition_object,
 								'label'        => $condition_object->label,
 								'group'        => $condition_object->group,
 								'extra_params' => $condition_object->extra_params,
-							);
+							];
 						}
 					}
 				}
@@ -1004,7 +1004,7 @@ class EarnCampaign extends Base {
 		/**
 		 * 3. calculate point based on action
 		 */
-		$rewards = array();
+		$rewards = [];
 		if ( $status ) {
 			$rewards = $this->processCampaignRewards( $data );
 		}
@@ -1013,7 +1013,7 @@ class EarnCampaign extends Base {
 	}
 
 	function processCampaignRewards( $data ) {
-		$rewards = array();
+		$rewards = [];
 		if ( isset( $data['action_type'] )
 		     && ! empty( $data['action_type'] )
 		) {

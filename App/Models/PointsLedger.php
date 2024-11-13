@@ -6,6 +6,7 @@
  * */
 
 namespace Wljm\App\Models;
+
 defined( 'ABSPATH' ) or die();
 
 class PointsLedger extends Base {
@@ -13,7 +14,7 @@ class PointsLedger extends Base {
 		parent::__construct();
 		$this->table       = self::$db->prefix . 'wlr_points_ledger';
 		$this->primary_key = 'id';
-		$this->fields      = array(
+		$this->fields      = [
 			'user_email'          => '%s',
 			'action_type'         => '%s',
 			'action_process_type' => '%s',
@@ -21,6 +22,6 @@ class PointsLedger extends Base {
 			'debit_points'        => '%s',
 			'note'                => '%s',
 			'created_at'          => '%s'
-		);
+		];
 	}
 }

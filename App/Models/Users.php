@@ -6,6 +6,7 @@
  * */
 
 namespace Wljm\App\Models;
+
 defined( 'ABSPATH' ) or die();
 
 class Users extends Base {
@@ -13,7 +14,7 @@ class Users extends Base {
 		parent::__construct();
 		$this->table       = self::$db->prefix . 'wlr_users';
 		$this->primary_key = 'id';
-		$this->fields      = array(
+		$this->fields      = [
 			'user_email'          => '%s',
 			'refer_code'          => '%s',
 			'points'              => '%s',
@@ -26,7 +27,7 @@ class Users extends Base {
 			'birthday_date'       => '%s',
 			'last_login'          => '%s',
 			'is_banned_user'      => '%d',
-		);
+		];
 	}
 
 	function insertOrUpdate( $data, $id = 0 ) {
@@ -37,7 +38,7 @@ class Users extends Base {
 		if ( $id > 0 ) {
 			$user = $this->getByKey( $id );
 		}
-		$user_fields = array(
+		$user_fields = [
 			'user_email'          => '',
 			'refer_code'          => '',
 			'points'              => 0,
@@ -50,15 +51,16 @@ class Users extends Base {
 			'birthday_date'       => null,
 			'last_login'          => 0,
 			'is_banned_user'      => 0
-		);
+		];
 		foreach ( $user_fields as $field_name => $field_value ) {
 			$user_fields[ $field_name ] = ( isset( $data[ $field_name ] ) ) ? $data[ $field_name ] :
 				( isset( $user ) && ! empty( $user ) && isset( $user->$field_name ) ? $user->$field_name : $field_value );
 		}
 		$old_level_id            = $user_fields['level_id'];
-		$user_fields['level_id'] = apply_filters( 'wlr_user_level_id', $user_fields['level_id'], $user_fields['earn_total_point'], $user_fields );
+		$user_fields['level_id'] = apply_filters( 'wlr_user_level_id', $user_fields['level_id'],
+			$user_fields['earn_total_point'], $user_fields );
 		if ( ! empty( $id ) && $id > 0 && ! empty( $user ) ) {
-			$this->updateRow( $user_fields, array( 'id' => $user->id ) );
+			$this->updateRow( $user_fields, [ 'id' => $user->id ] );
 			$status = true;
 		} else {
 			$status = $this->insertRow( $user_fields );

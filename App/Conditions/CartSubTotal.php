@@ -48,10 +48,10 @@ class CartSubTotal extends Base {
 
 	public function getMinimumAmount( $condition ) {
 		$min_amount = 0;
-		if ( isset( $condition->operator ) && isset( $condition->value ) && in_array( $condition->operator, array(
+		if ( isset( $condition->operator ) && isset( $condition->value ) && in_array( $condition->operator, [
 				'greater_than_or_equal',
 				'greater_than'
-			) ) ) {
+			] ) ) {
 			$min_amount = $condition->value;
 		}
 
@@ -60,10 +60,10 @@ class CartSubTotal extends Base {
 
 	public function getMaximumAmount( $condition ) {
 		$max_amount = 0;
-		if ( isset( $condition->operator ) && isset( $condition->value ) && in_array( $condition->operator, array(
+		if ( isset( $condition->operator ) && isset( $condition->value ) && in_array( $condition->operator, [
 				'less_than',
 				'less_than_or_equal'
-			) ) ) {
+			] ) ) {
 			$max_amount = $condition->value;
 		}
 

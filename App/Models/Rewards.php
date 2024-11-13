@@ -15,7 +15,7 @@ class Rewards extends Base {
 		parent::__construct();
 		$this->table       = self::$db->prefix . 'wlr_rewards';
 		$this->primary_key = 'id';
-		$this->fields      = array(
+		$this->fields      = [
 			'name'                   => '%s',
 			'description'            => '%s',
 			'reward_type'            => '%s',
@@ -43,7 +43,7 @@ class Rewards extends Base {
 			'coupon_type'            => '%s',
 			'max_discount'           => '%d',
 			'max_percentage'         => '%d'
-		);
+		];
 	}
 
 }

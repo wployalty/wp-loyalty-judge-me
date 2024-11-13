@@ -6,6 +6,7 @@
  * */
 
 namespace Wljm\App\Models;
+
 defined( 'ABSPATH' ) or die();
 
 class Logs extends Base {
@@ -13,7 +14,7 @@ class Logs extends Base {
 		parent::__construct();
 		$this->table       = self::$db->prefix . 'wlr_logs';
 		$this->primary_key = 'id';
-		$this->fields      = array(
+		$this->fields      = [
 			'user_email'       => '%s',
 			'action_type'      => '%s',
 			'reward_id'        => '%d',
@@ -36,7 +37,7 @@ class Logs extends Base {
 			'required_points'     => '%s',
 			'discount_code'       => '%s',
 			'referral_type'       => '%s'
-		);
+		];
 	}
 
 	function saveLog( $data ) {
@@ -47,7 +48,7 @@ class Logs extends Base {
 			return false;
 		}
 		$status      = false;
-		$insert_data = array(
+		$insert_data = [
 			'user_email'     => sanitize_email( $data['user_email'] ),
 			'action_type'    => isset( $data['action_type'] ) && ! empty( $data['action_type'] ) ? sanitize_text_field( $data['action_type'] ) : '',
 			'reward_id'      => (int) isset( $data['reward_id'] ) && ! empty( $data['reward_id'] ) ? $data['reward_id'] : 0,
@@ -69,7 +70,7 @@ class Logs extends Base {
 			'required_points'     => (int) isset( $data['required_points'] ) && ! empty( $data['required_points'] ) ? $data['required_points'] : 0,
 			'discount_code'       => isset( $data['discount_code'] ) && ! empty( $data['discount_code'] ) ? $data['discount_code'] : null,
 			'referral_type'       => isset( $data['referral_type'] ) && ! empty( $data['referral_type'] ) ? $data['referral_type'] : '',
-		);
+		];
 		if ( isset( $data['added_point'] ) && $data['added_point'] > 0 ) {
 			$insert_data['points']              = $data['added_point'];
 			$insert_data['action_process_type'] = 'earn_point';

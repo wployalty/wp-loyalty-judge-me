@@ -11,7 +11,7 @@ use Wljm\App\Helpers\Woocommerce;
 class ProductReview extends Base {
 	public static $instance = null;
 
-	public function __construct( $config = array() ) {
+	public function __construct( $config = [] ) {
 		parent::__construct( $config );
 	}
 
@@ -24,9 +24,9 @@ class ProductReview extends Base {
 		}
 		$status           = false;
 		$earn_campaign    = EarnCampaign::getInstance();
-		$cart_action_list = array( 'product_review' );
+		$cart_action_list = [ 'product_review' ];
 		foreach ( $cart_action_list as $action_type ) {
-			$variant_reward = $this->getTotalEarning( $action_type, array(), $action_data );
+			$variant_reward = $this->getTotalEarning( $action_type, [], $action_data );
 			foreach ( $variant_reward as $campaign_id => $v_reward ) {
 				if ( isset( $v_reward['point'] ) && ! empty( $v_reward['point'] ) && $v_reward['point'] > 0 ) {
 					$status = $earn_campaign->addEarnCampaignPoint( $action_type, $v_reward['point'], $campaign_id,
@@ -46,7 +46,7 @@ class ProductReview extends Base {
 
 	function processMessage( $point_rule, $earning ) {
 		$point             = isset( $earning['point'] ) && ! empty( $earning['point'] ) ? (int) $earning['point'] : 0;
-		$rewards           = isset( $earning['rewards'] ) && ! empty( $earning['rewards'] ) ? (array) $earning['rewards'] : array();
+		$rewards           = isset( $earning['rewards'] ) && ! empty( $earning['rewards'] ) ? (array) $earning['rewards'] : [];
 		$available_rewards = '';
 		foreach ( $rewards as $single_reward ) {
 			if ( is_object( $single_reward ) && isset( $single_reward->display_name ) ) {
@@ -68,12 +68,12 @@ class ProductReview extends Base {
 				$message = '<span class="wlr-product-review-message">' . Woocommerce::getCleanHtml( $review_message ) . '</span>';
 			}
 			$point           = $this->roundPoints( $point );
-			$short_code_list = array(
+			$short_code_list = [
 				'{wlr_points}'       => $point > 0 ? $woocommerce_helper->numberFormatI18n( $point ) : '',
 				'{wlr_points_label}' => $this->getPointLabel( $point ),
 				'{wlr_reward_label}' => $this->getRewardLabel( $reward_count ),
 				'{wlr_rewards}'      => $available_rewards
-			);
+			];
 			$display_message = $this->processShortCodes( $short_code_list, $message );
 		}
 

@@ -16,14 +16,14 @@ use Wljm\App\Helpers\Woocommerce;
 class SignUp extends Base {
 	public static $instance = null;
 
-	public function __construct( $config = array() ) {
+	public function __construct( $config = [] ) {
 		parent::__construct( $config );
 	}
 
 	function processMessage( $point_rule, $earning ) {
 		$message = '';
 		$point   = isset( $earning['point'] ) && ! empty( $earning['point'] ) ? (int) $earning['point'] : 0;
-		$rewards = isset( $earning['rewards'] ) && ! empty( $earning['rewards'] ) ? (array) $earning['rewards'] : array();
+		$rewards = isset( $earning['rewards'] ) && ! empty( $earning['rewards'] ) ? (array) $earning['rewards'] : [];
 		if ( $point <= 0 && empty( $rewards ) ) {
 			return $message;
 		}
@@ -47,12 +47,12 @@ class SignUp extends Base {
 		$woocommerce_helper = Woocommerce::getInstance();
 		if ( ( $point > 0 || ! empty( $available_rewards ) ) && ! empty( $message ) ) {
 			$point           = $this->roundPoints( $point );
-			$short_code_list = array(
+			$short_code_list = [
 				'{wlr_points}'       => $point > 0 ? $woocommerce_helper->numberFormatI18n( $point ) : '',
 				'{wlr_points_label}' => $this->getPointLabel( $point ),
 				'{wlr_reward_label}' => $this->getRewardLabel( $reward_count ),
 				'{wlr_rewards}'      => $available_rewards
-			);
+			];
 			$display_message = $this->processShortCodes( $short_code_list, $message );
 		}
 

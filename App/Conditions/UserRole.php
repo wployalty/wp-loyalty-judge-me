@@ -38,7 +38,7 @@ class UserRole extends Base {
 
 			return $this->doCompareInListOperation( $options->operator, $current_user_role, $options->value );
 		}
-		$current_user_role = array( 'wlr_rules_guest' );
+		$current_user_role = [ 'wlr_rules_guest' ];
 
 		return $this->doCompareInListOperation( $options->operator, $current_user_role, $options->value );
 	}

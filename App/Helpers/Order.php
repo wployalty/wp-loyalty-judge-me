@@ -6,16 +6,17 @@
  * */
 
 namespace Wljm\App\Helpers;
+
 defined( 'ABSPATH' ) or die;
 
 class Order extends Base {
 	public static $instance = null;
 
-	public function __construct( $config = array() ) {
+	public function __construct( $config = [] ) {
 		parent::__construct( $config );
 	}
 
-	public static function getInstance( array $config = array() ) {
+	public static function getInstance( array $config = [] ) {
 		if ( ! self::$instance ) {
 			self::$instance = new self( $config );
 		}

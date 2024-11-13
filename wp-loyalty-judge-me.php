@@ -22,9 +22,9 @@
 defined( 'ABSPATH' ) or die;
 if ( ! function_exists( 'isWployaltyActiveOrNot' ) ) {
 	function isWployaltyActiveOrNot() {
-		$active_plugins = apply_filters( 'active_plugins', get_option( 'active_plugins', array() ) );
+		$active_plugins = apply_filters( 'active_plugins', get_option( 'active_plugins', [] ) );
 		if ( is_multisite() ) {
-			$active_plugins = array_merge( $active_plugins, get_site_option( 'active_sitewide_plugins', array() ) );
+			$active_plugins = array_merge( $active_plugins, get_site_option( 'active_sitewide_plugins', [] ) );
 		}
 
 		return in_array( 'wp-loyalty-rules/wp-loyalty-rules.php', $active_plugins,
@@ -34,9 +34,9 @@ if ( ! function_exists( 'isWployaltyActiveOrNot' ) ) {
 }
 if ( ! function_exists( 'isWoocommerceActive' ) ) {
 	function isWoocommerceActive() {
-		$active_plugins = apply_filters( 'active_plugins', get_option( 'active_plugins', array() ) );
+		$active_plugins = apply_filters( 'active_plugins', get_option( 'active_plugins', [] ) );
 		if ( is_multisite() ) {
-			$active_plugins = array_merge( $active_plugins, get_site_option( 'active_sitewide_plugins', array() ) );
+			$active_plugins = array_merge( $active_plugins, get_site_option( 'active_sitewide_plugins', [] ) );
 		}
 
 		return in_array( 'woocommerce/woocommerce.php',
@@ -45,9 +45,9 @@ if ( ! function_exists( 'isWoocommerceActive' ) ) {
 }
 if ( ! function_exists( 'isJudgeMeActive' ) ) {
 	function isJudgeMeActive() {
-		$active_plugins = apply_filters( 'active_plugins', get_option( 'active_plugins', array() ) );
+		$active_plugins = apply_filters( 'active_plugins', get_option( 'active_plugins', [] ) );
 		if ( is_multisite() ) {
-			$active_plugins = array_merge( $active_plugins, get_site_option( 'active_sitewide_plugins', array() ) );
+			$active_plugins = array_merge( $active_plugins, get_site_option( 'active_sitewide_plugins', [] ) );
 		}
 
 		return in_array( 'judgeme-product-reviews-woocommerce/judgeme.php',

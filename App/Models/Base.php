@@ -3,9 +3,9 @@
 namespace Wljm\App\Models;
 
 abstract class Base {
-	public static $tables, $field_list = array();
+	public static $tables, $field_list = [];
 	static protected $db;
-	protected $table = null, $primary_key = null, $fields = array();
+	protected $table = null, $primary_key = null, $fields = [];
 
 	function __construct() {
 		global $wpdb;
@@ -22,7 +22,7 @@ abstract class Base {
 
 	function getByKey( $key ) {
 		$key   = sanitize_key( $key );
-		$query = self::$db->prepare( "SELECT * FROM {$this->table} WHERE `{$this->primary_key}` = %d;", array( $key ) );
+		$query = self::$db->prepare( "SELECT * FROM {$this->table} WHERE `{$this->primary_key}` = %d;", [ $key ] );
 
 		return self::$db->get_row( $query, OBJECT );
 	}
@@ -65,7 +65,7 @@ abstract class Base {
 	}
 
 	function getValidSearchWords( $terms ) {
-		$valid_terms = array();
+		$valid_terms = [];
 		$stopwords   = $this->getSearchStopWords();
 
 		foreach ( $terms as $term ) {
@@ -90,9 +90,9 @@ abstract class Base {
 		return $valid_terms;
 	}
 
-	function getQueryData( $data = array(), $select = '*', $search_fields = array(), $order_by = true, $is_single = true ) {
+	function getQueryData( $data = [], $select = '*', $search_fields = [], $order_by = true, $is_single = true ) {
 		if ( empty( $data ) || empty( $select ) ) {
-			return array();
+			return [];
 		}
 		$search         = isset( $data['search'] ) && ! empty( $data['search'] ) ? $data['search'] : '';
 		$campaign_where = '';
@@ -101,9 +101,9 @@ abstract class Base {
 			$search_and   = '';
 			foreach ( $search_terms as $search_term ) {
 				$like         = '%' . self::$db->esc_like( $search_term ) . '%';
-				$search_where = array();
+				$search_where = [];
 				foreach ( $search_fields as $key ) {
-					$search_where[] = self::$db->prepare( '(' . $key . ' like %s)', array( $like ) );
+					$search_where[] = self::$db->prepare( '(' . $key . ' like %s)', [ $like ] );
 				}
 
 				if ( ! empty( $search_where ) ) {
@@ -113,17 +113,19 @@ abstract class Base {
 			}
 		}
 
-		$conditions                   = array();
+		$conditions                   = [];
 		$fields                       = $this->fields;
 		$fields[ $this->primary_key ] = '%d';
 		foreach ( $fields as $field => $value ) {
-			$field_option = isset( $data[ $field ] ) && ! empty( $data[ $field ] ) ? $data[ $field ] : array();
+			$field_option = isset( $data[ $field ] ) && ! empty( $data[ $field ] ) ? $data[ $field ] : [];
 
 			if ( isset( $field_option['operator'] ) && ! empty( $field_option['operator'] ) && isset( $field_option['value'] ) ) {
-				$conditions[] = self::$db->prepare( $field . ' ' . $field_option['operator'] . ' %s', array( $field_option['value'] ) );
+				$conditions[] = self::$db->prepare( $field . ' ' . $field_option['operator'] . ' %s',
+					[ $field_option['value'] ] );
 			}
 		}
-		$campaign_where .= ! empty( $campaign_where ) ? ' AND ' . implode( ' AND ', $conditions ) : implode( ' AND ', $conditions );
+		$campaign_where .= ! empty( $campaign_where ) ? ' AND ' . implode( ' AND ', $conditions ) : implode( ' AND ',
+			$conditions );
 		if ( $order_by && ! empty( $campaign_where ) ) {
 			$filter_order          = (string) isset( $data['filter_order'] ) && ! empty( $data['filter_order'] ) ? $data['filter_order'] : 'id';
 			$filter_order_dir      = (string) isset( $data['filter_order_dir'] ) && ! empty( $data['filter_order_dir'] ) ? $data['filter_order_dir'] : 'DESC';
@@ -135,7 +137,7 @@ abstract class Base {
 		$limit  = (int) isset( $data['limit'] ) && ! empty( $data['limit'] ) ? $data['limit'] : 0;
 		$offset = (int) isset( $data['offset'] ) && ! empty( $data['offset'] ) ? $data['offset'] : 0;
 		if ( $limit > 0 && ! empty( $campaign_where ) && ! $is_single ) {
-			$campaign_where .= self::$db->prepare( ' LIMIT %d OFFSET %d', array( $limit, $offset ) );
+			$campaign_where .= self::$db->prepare( ' LIMIT %d OFFSET %d', [ $limit, $offset ] );
 		}
 
 		return $this->getWhere( $campaign_where, $select, $is_single );
@@ -146,7 +148,8 @@ abstract class Base {
 			$columns       = implode( '`,`', array_keys( $this->fields ) );
 			$values        = implode( ',', $this->fields );
 			$actual_values = $this->formatData( $data );
-			$query         = self::$db->prepare( "INSERT INTO {$this->table} (`{$columns}`) VALUES ({$values});", $actual_values );
+			$query         = self::$db->prepare( "INSERT INTO {$this->table} (`{$columns}`) VALUES ({$values});",
+				$actual_values );
 			self::$db->query( $query );
 
 			return self::$db->insert_id;
@@ -155,7 +158,7 @@ abstract class Base {
 		return 0;
 	}
 
-	function updateRow( $data, $where = array() ) {
+	function updateRow( $data, $where = [] ) {
 		if ( empty( $data ) || ! is_array( $data ) ) {
 			return false;
 		}
@@ -165,9 +168,9 @@ abstract class Base {
 
 	function formatData( $data ) {
 		if ( empty( $this->fields ) ) {
-			return array();
+			return [];
 		}
-		$result = array();
+		$result = [];
 		foreach ( $this->fields as $key => $value ) {
 			$key = trim( $key );
 			if ( '%d' == trim( $value ) ) {

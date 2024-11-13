@@ -6,9 +6,9 @@ use Wljm\App\Models\Users;
 
 class Woocommerce {
 	public static $instance = null;
-	protected static $options = array();
-	protected static $banned_user = array();
-	protected static $products = array();
+	protected static $options = [];
+	protected static $banned_user = [];
+	protected static $products = [];
 
 	public static function hasAdminPrivilege() {
 		if ( current_user_can( 'manage_woocommerce' ) ) {
@@ -34,15 +34,15 @@ class Woocommerce {
 		try {
 			$html         = html_entity_decode( $html );
 			$html         = preg_replace( '/(<(script|style|iframe)\b[^>]*>).*?(<\/\2>)/is', "$1$3", $html );
-			$allowed_html = array(
-				'br'     => array(),
-				'strong' => array(),
-				'span'   => array( 'class' => array() ),
-				'div'    => array( 'class' => array() ),
-				'p'      => array( 'class' => array() ),
-				'b'      => array( 'class' => array() ),
-				'i'      => array( 'class' => array() ),
-			);
+			$allowed_html = [
+				'br'     => [],
+				'strong' => [],
+				'span'   => [ 'class' => [] ],
+				'div'    => [ 'class' => [] ],
+				'p'      => [ 'class' => [] ],
+				'b'      => [ 'class' => [] ],
+				'i'      => [ 'class' => [] ],
+			];
 
 			return wp_kses( $html, $allowed_html );
 		} catch ( \Exception $e ) {
@@ -75,8 +75,9 @@ class Woocommerce {
 		}
 		if ( isset( self::$products[ $product_id ] ) ) {
 			return self::$products[ $product_id ];
-		} else if ( function_exists( 'wc_get_product' ) ) {
-			self::$products[ $product_id ] = apply_filters( 'wlr_rules_get_wc_product', wc_get_product( $product_id ), $product_id );
+		} elseif ( function_exists( 'wc_get_product' ) ) {
+			self::$products[ $product_id ] = apply_filters( 'wlr_rules_get_wc_product', wc_get_product( $product_id ),
+				$product_id );
 
 			return self::$products[ $product_id ];
 		}
@@ -105,7 +106,7 @@ class Woocommerce {
 
 	function getOptions( $key = '', $default = '' ) {
 		if ( empty( $key ) ) {
-			return array();
+			return [];
 		}
 		if ( ! isset( self::$options[ $key ] ) || empty( self::$options[ $key ] ) ) {
 			self::$options[ $key ] = get_option( $key, $default );
@@ -114,7 +115,7 @@ class Woocommerce {
 		return self::$options[ $key ];
 	}
 
-	public static function getInstance( array $config = array() ) {
+	public static function getInstance( array $config = [] ) {
 		if ( ! self::$instance ) {
 			self::$instance = new self( $config );
 		}
@@ -124,9 +125,12 @@ class Woocommerce {
 
 	function getActionTypes() {
 		$earn_helper  = EarnCampaign::getInstance();
-		$action_types = array(
-			'point_for_purchase' => is_admin() ? __( 'Points For Purchase', 'wp-loyalty-judge-me' ) : sprintf( __( '%s For Purchase', 'wp-loyalty-judge-me' ), $earn_helper->getPointLabel( 3 ) ),
-		);
+		$action_types = [
+			'point_for_purchase' => is_admin() ? __( 'Points For Purchase',
+				'wp-loyalty-judge-me' ) : sprintf( __( '%s For Purchase', 'wp-loyalty-judge-me' ),
+				$earn_helper->getPointLabel( 3 ) ),
+		];
+
 		return apply_filters( 'wlr_action_types', $action_types );
 	}
 
@@ -158,7 +162,7 @@ class Woocommerce {
 		}
 		$user_modal = new Users();
 		global $wpdb;
-		$where = $wpdb->prepare( "user_email = %s AND is_banned_user = %d ", array( $user_email, 1 ) );
+		$where = $wpdb->prepare( "user_email = %s AND is_banned_user = %d ", [ $user_email, 1 ] );
 		$user  = $user_modal->getWhere( $where, "*", true );
 
 		return static::$banned_user[ $user_email ] = ( ! empty( $user ) && is_object( $user ) && isset( $user->is_banned_user ) );
@@ -204,7 +208,7 @@ class Woocommerce {
 			return $product->get_attributes();
 		}
 
-		return array();
+		return [];
 	}
 
 	function getAttributeName( $attribute ) {
@@ -220,7 +224,7 @@ class Woocommerce {
 			return $attribute->get_options();
 		}
 
-		return array();
+		return [];
 	}
 
 	function getAttributeVariation( $attribute ) {
@@ -232,7 +236,7 @@ class Woocommerce {
 	}
 
 	function getProductCategories( $product ) {
-		$categories = array();
+		$categories = [];
 		if ( $this->isMethodExists( $product, 'get_category_ids' ) ) {
 			if ( $this->productTypeIs( $product, 'variation' ) ) {
 				$parent_id = $this->getProductParentId( $product );
@@ -257,16 +261,16 @@ class Woocommerce {
 			return $product->get_tag_ids();
 		}
 
-		return array();
+		return [];
 	}
 
 	function getVariantsOfProducts( $product_ids ) {
-		$variants = array();
+		$variants = [];
 		if ( ! empty( $product_ids ) ) {
 			foreach ( $product_ids as $product_id ) {
 				$product = $this->getProduct( $product_id );
 				if ( ! empty( $product ) && is_object( $product ) && method_exists( $product, 'is_type' ) ) {
-					if ( $product->is_type( array( 'variable', 'variable-subscription' ) ) ) {
+					if ( $product->is_type( [ 'variable', 'variable-subscription' ] ) ) {
 						$additional_variants = $this->getProductChildren( $product );
 						if ( ! empty( $additional_variants ) && is_array( $additional_variants ) ) {
 							$variants = array_merge( $variants, $additional_variants );
@@ -286,7 +290,7 @@ class Woocommerce {
 			}
 		}
 
-		return array();
+		return [];
 	}
 
 	function getProductId( $product ) {
@@ -312,7 +316,7 @@ class Woocommerce {
 			return WC()->cart->get_cart();
 		}
 
-		return array();
+		return [];
 	}
 
 	function getOrderItems( $order = null ) {
@@ -323,8 +327,9 @@ class Woocommerce {
 			return wc_get_order( $order )->get_items( 'line_item' );
 		}
 
-		return array();
+		return [];
 	}
+
 	function getCartSubtotal( $cart_data = null ) {
 		$cart     = $this->getCart( $cart_data );
 		$subtotal = 0;
@@ -386,12 +391,13 @@ class Woocommerce {
 			return $user->roles;
 		}
 
-		return array();
+		return [];
 	}
 
 	function setSession( $key, $data ) {
 		if ( function_exists( 'WC' ) ) {
-			if ( isset( WC()->session ) && is_object( WC()->session ) && $this->isMethodExists( WC()->session, 'set' ) ) {
+			if ( isset( WC()->session ) && is_object( WC()->session ) && $this->isMethodExists( WC()->session,
+					'set' ) ) {
 				WC()->session->set( $key, $data );
 			}
 		}

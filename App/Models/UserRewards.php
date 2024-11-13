@@ -6,6 +6,7 @@
  * */
 
 namespace Wljm\App\Models;
+
 defined( 'ABSPATH' ) or die();
 
 class UserRewards extends Base {
@@ -13,7 +14,7 @@ class UserRewards extends Base {
 		parent::__construct();
 		$this->table       = self::$db->prefix . 'wlr_user_rewards';
 		$this->primary_key = 'id';
-		$this->fields      = array(
+		$this->fields      = [
 			'name'                   => '%s',
 			'description'            => '%s',
 			'email'                  => '%s',
@@ -60,6 +61,6 @@ class UserRewards extends Base {
 			'coupon_type'            => '%s',
 			'max_discount'           => '%d',
 			'max_percentage'         => '%d'
-		);
+		];
 	}
 }

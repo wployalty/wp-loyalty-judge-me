@@ -6,6 +6,7 @@
  * */
 
 namespace Wljm\App\Models;
+
 defined( 'ABSPATH' ) or die();
 
 class EarnCampaignTransactions extends Base {
@@ -13,7 +14,7 @@ class EarnCampaignTransactions extends Base {
 		parent::__construct();
 		$this->table       = self::$db->prefix . 'wlr_earn_campaign_transaction';
 		$this->primary_key = 'id';
-		$this->fields      = array(
+		$this->fields      = [
 			'user_email'       => '%s',
 			'action_type'      => '%s',
 			'transaction_type' => '%s',
@@ -34,6 +35,6 @@ class EarnCampaignTransactions extends Base {
 			'action_sub_value' => '%s',
 			'created_at'       => '%s',
 			'modified_at'      => '%s',
-		);
+		];
 	}
 }
