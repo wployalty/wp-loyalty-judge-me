@@ -30,12 +30,12 @@ wljm_jquery(document).on('click', '#wljm-main-page #wljm-webhook-delete', functi
             button.attr('disabled', false);
             button.html(wljm_localize_data.delete_button_label);
             if (json.success == true) {
-                alertify.success(json.message);
+                alertify.success(json.data.message);
                 setTimeout(function () {
                     location.reload();
                 }, 800);
             } else if (json.success == false) {
-                alertify.error(json.message);
+                alertify.error(json.data.message);
             }
         }
     });
@@ -61,12 +61,12 @@ wljm_jquery(document).on('click', '#wljm-main-page #wljm-webhook-create', functi
             button.attr('disabled', false);
             button.html(wljm_localize_data.create_button_label);
             if (json.success == true) {
-                alertify.success(json.message);
+                alertify.success(json.data.message);
                 setTimeout(function () {
                     location.reload();
                 }, 800);
             } else if (json.success == false) {
-                alertify.error(json.message);
+                alertify.error(json.data.message);
             }
         }
     });
