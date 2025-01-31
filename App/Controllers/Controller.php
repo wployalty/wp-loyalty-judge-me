@@ -325,7 +325,9 @@ class Controller {
 					'user_email'         => $reviewer_email,
 					'product_id'         => $prod_id,
 					'is_calculate_based' => 'product',
-					'product'            => function_exists( 'wc_get_product' ) ? wc_get_product( $prod_id ) : false
+					'product'            => function_exists( 'wc_get_product' ) ? wc_get_product( $prod_id ) : false,
+					'review_has_images'  => ! empty( $body['review']['has_published_pictures'] ),
+                    'review_has_videos'  => ! empty( $body['review']['has_published_videos'] )
 				];
 				$product_review_helper->applyEarnProductReview( $action_data );
 			}
@@ -363,7 +365,9 @@ class Controller {
 					'user_email'         => $reviewer_email,
 					'product_id'         => $prod_id,
 					'is_calculate_based' => 'product',
-					'product'            => function_exists( 'wc_get_product' ) ? wc_get_product( $prod_id ) : false
+					'product'            => function_exists( 'wc_get_product' ) ? wc_get_product( $prod_id ) : false,
+					'review_has_images'  => ! empty( $body['review']['has_published_pictures'] ),
+					'review_has_videos'  => ! empty( $body['review']['has_published_videos'] )
 				];
 				$product_review_helper->applyEarnProductReview( $action_data );
 			}
